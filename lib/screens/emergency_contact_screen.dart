@@ -36,6 +36,7 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
 
   // Track which contact is being edited. Null means adding a new contact.
   int? _editingIndex;
+  bool _hasConsented = false;
 
   @override
   void initState() {
@@ -154,6 +155,16 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
       return false;
     }
 
+    if (!_hasConsented) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please confirm that the contact has consented to receive SMS alerts.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return false;
+    }
+
     final inputPhone = _phoneController.text.trim().replaceAll(RegExp(r'\D'), '');
 
     // Check for duplicates
@@ -196,6 +207,7 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
       _nameController.clear();
       _phoneController.clear();
       _emailController.clear();
+      _hasConsented = false;
       _isFormVisible = false;
     });
     
@@ -216,6 +228,7 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
         _nameController.clear();
         _phoneController.clear();
         _emailController.clear();
+        _hasConsented = false;
       } else if (_editingIndex != null && _editingIndex! > index) {
         // Adjust index if we removed a contact before the one being edited
         _editingIndex = _editingIndex! - 1;
@@ -242,6 +255,7 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
       _emailController.text = contact['email'] ?? '';
       _selectedRelation = contact['relation'];
       
+      _hasConsented = false;
       _isFormVisible = true;
     });
   }
@@ -469,9 +483,62 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
                           },
                         ),
                         const SizedBox(height: 24),
+                        Container(
+                          padding: const EdgeInsets.all(12.0),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF3F4F6),
+                            borderRadius: BorderRadius.circular(8.0),
+                            border: Border.all(color: const Color(0xFFE5E7EB)),
+                          ),
+                          child: const Text(
+                            'By adding this contact, you confirm they have agreed to receive automated emergency SMS alerts from IamOkay.\n\nMessage frequency varies. Message & data rates may apply.\n\nReply STOP to opt out. Reply HELP for help.',
+                            style: TextStyle(
+                              fontSize: 12.0,
+                              color: Color(0xFF4B5563),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: Checkbox(
+                                value: _hasConsented,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _hasConsented = value ?? false;
+                                  });
+                                },
+                                activeColor: const Color(0xFF1F4ED8),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _hasConsented = !_hasConsented;
+                                  });
+                                },
+                                child: const Text(
+                                  'I confirm this contact has consented to receive SMS alerts from IamOkay.',
+                                  style: TextStyle(
+                                    fontSize: 14.0,
+                                    color: Color(0xFF333333),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
                         CustomButton(
                           text: _editingIndex != null ? 'Update Contact' : 'Add Contact',
-                          onPressed: _saveContact,
+                          onPressed: _hasConsented ? _saveContact : null,
                           backgroundColor: Colors.transparent,
                           textColor: const Color(0xFF1F4ED8),
                         ),

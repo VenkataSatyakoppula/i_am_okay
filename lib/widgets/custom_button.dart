@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class CustomButton extends StatelessWidget {
   final String text;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final Color? backgroundColor;
   final Color? textColor;
   final double? fontSize;
@@ -26,6 +26,8 @@ class CustomButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
           foregroundColor: textColor,
+          disabledBackgroundColor: backgroundColor == Colors.transparent ? Colors.transparent : const Color(0xFFE0E0E0),
+          disabledForegroundColor: const Color(0xFFA0A0A0),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0), // Modern rounded corners
           ),
@@ -36,7 +38,7 @@ class CustomButton extends StatelessWidget {
           style: TextStyle(
             fontSize: fontSize,
             fontWeight: FontWeight.w500, // Medium (500)
-            color: textColor,
+            color: onPressed == null ? const Color(0xFFA0A0A0) : textColor,
           ),
         ),
       ),

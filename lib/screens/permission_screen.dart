@@ -27,7 +27,11 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _checkPermissions();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _checkPermissions();
+      }
+    });
   }
 
   @override

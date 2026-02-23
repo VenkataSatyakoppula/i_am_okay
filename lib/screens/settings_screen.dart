@@ -9,6 +9,7 @@ import 'about_us_screen.dart';
 import 'daily_reminder_screen.dart';
 import 'edit_profile_screen.dart';
 import 'support_screen.dart';
+import 'privacy_policy_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -297,6 +298,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: "Support",
             onTap: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const SupportScreen())),
+          ),
+          const Divider(height: 1, indent: 16, endIndent: 16),
+          _buildProfileOption(
+            icon: Icons.privacy_tip_outlined,
+            title: "Privacy Policy",
+            onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const PrivacyPolicyScreen())),
           ),
           const Divider(height: 1, indent: 16, endIndent: 16),
           _buildProfileOption(

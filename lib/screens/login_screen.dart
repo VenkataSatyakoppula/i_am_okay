@@ -1,3 +1,4 @@
+import 'package:IamOkay/screens/landing_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -104,6 +105,17 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _logout() async {
+    // await _storage.deleteAll();
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const LandingScreen()),
+        (route) => false,
+      );
+    }
+  }
+
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -199,7 +211,7 @@ class _LoginScreenState extends State<LoginScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF000000)),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: _logout,
         ),
       ),
       body: SafeArea(
