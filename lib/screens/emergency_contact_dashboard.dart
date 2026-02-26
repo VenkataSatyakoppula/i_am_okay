@@ -50,6 +50,7 @@ class _EmergencyContactDashboardState extends State<EmergencyContactDashboard> {
     // Cancel all notifications on logout
     await NotificationService().cancelAllNotifications();
 
+    await GraphQLService.clearUserCache();
     await _storage.deleteAll();
     if (mounted) {
       Navigator.pushAndRemoveUntil(

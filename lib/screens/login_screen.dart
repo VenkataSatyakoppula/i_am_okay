@@ -214,19 +214,24 @@ class _LoginScreenState extends State<LoginScreen> {
           onPressed: _logout,
         ),
       ),
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          padding: EdgeInsets.only(
+            left: 24.0,
+            right: 24.0,
+            bottom: MediaQuery.viewInsetsOf(context).bottom,
+          ),
           child: Form(
             key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Spacer(),
-                // Health Related Logo
-              Center(
-                child: SvgPicture.asset(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 24),
+                  Center(
+                    child: SvgPicture.asset(
                   'assets/icons/landing_logo.svg',
                   height: 100,
                   colorFilter: const ColorFilter.mode(
@@ -335,8 +340,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ],
               ),
-              const Spacer(),
-            ],
+                  const SizedBox(height: 32),
+                ],
+              ),
             ),
           ),
         ),

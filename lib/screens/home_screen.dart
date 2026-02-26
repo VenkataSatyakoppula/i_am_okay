@@ -196,7 +196,7 @@ class _HomeContentState extends State<HomeContent>
           _applyUserToState(user);
         });
 
-        // Handle notifications outside setState
+        // Only schedule if reminder time is set and not already scheduled (avoids lag on iOS)
         if (user.reminderSettings != null && user.reminderSettings!.checkInTime != null) {
           final timeParts = user.reminderSettings!.checkInTime!.split(':');
           if (timeParts.length == 2) {
@@ -207,10 +207,15 @@ class _HomeContentState extends State<HomeContent>
             final isPaused = user.reminderSettings!.isPaused ?? false;
             final pausedUntil = user.reminderSettings!.pausedUntil;
 
-            if (!isPaused || (pausedUntil != null && DateTime.now().isAfter(pausedUntil))) {
-              await NotificationService().scheduleDailyNotification(time);
-            } else {
+            if (isPaused && (pausedUntil == null || !DateTime.now().isAfter(pausedUntil))) {
               await NotificationService().cancelAllNotifications();
+            } else {
+              final storedTime = await _storage.read(key: 'last_scheduled_reminder_time');
+              final currentTimeStr = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+              if (storedTime != currentTimeStr) {
+                await NotificationService().scheduleDailyNotification(time);
+                await _storage.write(key: 'last_scheduled_reminder_time', value: currentTimeStr);
+              }
             }
           }
         }
@@ -406,6 +411,7 @@ class _HomeContentState extends State<HomeContent>
 
         // Handle notification rescheduling
         if (isPaused) {
+          await _storage.delete(key: 'last_scheduled_reminder_time');
           if (pausedUntil != null && _checkInTimeOfDay != null) {
             final localPausedUntil = pausedUntil.toLocal();
             var scheduledDate = tz.TZDateTime(
@@ -431,7 +437,9 @@ class _HomeContentState extends State<HomeContent>
         } else {
           // Resuming
           if (_checkInTimeOfDay != null) {
-            NotificationService().scheduleDailyNotification(_checkInTimeOfDay!);
+            await NotificationService().scheduleDailyNotification(_checkInTimeOfDay!);
+            final timeStr = '${_checkInTimeOfDay!.hour.toString().padLeft(2, '0')}:${_checkInTimeOfDay!.minute.toString().padLeft(2, '0')}';
+            await _storage.write(key: 'last_scheduled_reminder_time', value: timeStr);
           }
         }
 

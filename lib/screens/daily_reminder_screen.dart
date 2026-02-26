@@ -108,6 +108,10 @@ class _DailyReminderScreenState extends State<DailyReminderScreen> {
       // Schedule local notification
       await NotificationService().requestPermissions();
       await NotificationService().scheduleDailyNotification(_selectedTime!);
+      await _storage.write(
+        key: 'last_scheduled_reminder_time',
+        value: formattedTime,
+      );
 
       if (mounted) {
         LoadingOverlay.hide(context);

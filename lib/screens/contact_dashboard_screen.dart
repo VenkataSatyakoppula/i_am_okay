@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/user_model.dart';
 import '../services/graphql_service.dart';
+import '../services/notification_service.dart';
 import 'landing_screen.dart';
 
 class ContactDashboardScreen extends StatefulWidget {
@@ -63,6 +64,8 @@ class _ContactDashboardScreenState extends State<ContactDashboardScreen> {
   }
 
   Future<void> _handleLogout() async {
+    await NotificationService().cancelAllNotifications();
+    await GraphQLService.clearUserCache();
     await _storage.deleteAll();
     if (mounted) {
       Navigator.pushAndRemoveUntil(

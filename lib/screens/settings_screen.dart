@@ -378,7 +378,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _logout() async {
     // Cancel all notifications on logout
     await NotificationService().cancelAllNotifications();
-
+    // Clear in-memory/disk user cache and all secure storage (auth_token, user_id,
+    // last_scheduled_reminder_time, etc.) so the next user gets a clean state
     await GraphQLService.clearUserCache();
     await _storage.deleteAll();
     if (mounted) {

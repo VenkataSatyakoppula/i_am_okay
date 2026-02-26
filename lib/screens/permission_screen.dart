@@ -1,9 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'dart:io';
 import '../widgets/custom_button.dart';
+import '../services/notification_service.dart';
 import 'biometric_setup_screen.dart';
 import 'home_screen.dart';
 
@@ -74,6 +75,10 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
       if (status.isPermanentlyDenied) {
         openAppSettings();
       }
+    }
+    // iOS: plugin must also request so scheduled notifications can fire
+    if (Platform.isIOS) {
+      await NotificationService().requestPermissions();
     }
 
     // Request Location
