@@ -29,11 +29,13 @@ class NotificationService {
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/launcher_icon');
 
+    // Set to false so iOS does not show the permission prompt at app launch
+    // (e.g. on landing screen). Request later on the Permissions screen.
     final DarwinInitializationSettings initializationSettingsDarwin =
         DarwinInitializationSettings(
-      requestSoundPermission: true,
-      requestBadgePermission: true,
-      requestAlertPermission: true,
+      requestSoundPermission: false,
+      requestBadgePermission: false,
+      requestAlertPermission: false,
     );
 
     final InitializationSettings initializationSettings = InitializationSettings(

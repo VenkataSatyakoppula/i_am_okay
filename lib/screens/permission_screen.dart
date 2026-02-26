@@ -196,24 +196,20 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
               
               CustomButton(
                 text: 'Continue',
-                backgroundColor: _allRequiredPermissionsGranted 
-                    ? const Color(0xFF1F4ED8) 
-                    : const Color(0xFFE0E0E0),
-                textColor: _allRequiredPermissionsGranted 
-                    ? Colors.white 
-                    : const Color(0xFF999999),
                 onPressed: () {
-                  if (_allRequiredPermissionsGranted) {
-                    _navigateToNext();
-                  } else {
-                    // Optional: Allow user to skip or prompt again
-                     ScaffoldMessenger.of(context).showSnackBar(
+                  // Always allow continue: on iOS notification status can be wrong
+                  // even when permission was granted; don't block the user
+                  if (!_allRequiredPermissionsGranted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Please grant required permissions to continue.'),
+                        content: Text(
+                          'You can enable permissions later in Settings if needed.',
+                        ),
                         duration: Duration(seconds: 2),
                       ),
                     );
                   }
+                  _navigateToNext();
                 },
               ),
             ],
