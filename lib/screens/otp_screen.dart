@@ -212,6 +212,7 @@ class _OtpScreenState extends State<OtpScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFFFFF),
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: const Color(0xFFFFFFFF),
         elevation: 0,
@@ -222,13 +223,18 @@ class _OtpScreenState extends State<OtpScreen> {
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Spacer(),
-              const Icon(
+          padding: EdgeInsets.only(
+            left: 24.0,
+            right: 24.0,
+            bottom: MediaQuery.viewInsetsOf(context).bottom,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 24),
+                const Icon(
                 Icons.lock_outline,
                 size: 80,
                 color: Color(0xFF1F4ED8),
@@ -282,8 +288,9 @@ class _OtpScreenState extends State<OtpScreen> {
                   ),
                 ),
               ),
-              const Spacer(),
-            ],
+                const SizedBox(height: 32),
+              ],
+            ),
           ),
         ),
       ),

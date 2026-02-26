@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -107,6 +108,11 @@ class NotificationService {
     // Always cancel existing notifications to ensure we don't have duplicates or stale times
     await cancelAllNotifications();
 
+    // iOS: plugin must have requested permission or scheduled notifications may not fire
+    if (Platform.isIOS) {
+      await requestPermissions();
+    }
+
     // Schedule main notifications
     await _scheduleNotifications(startDate, 0, 'daily_checkin', 'Daily Check-in', 'Time to check in! Are you okay?');
     
@@ -119,48 +125,76 @@ class NotificationService {
     await BackgroundService().scheduleEmergencySmsSequence(startDate);
   }
 
+  /// Number of days to schedule ahead on iOS (one-off notifications; matchDateTimeComponents is unreliable on iOS).
+  static const int _iosScheduleDays = 15;
+
   Future<void> _scheduleNotifications(tz.TZDateTime startDate, int startId, String type, String title, String body) async {
     try {
-      // Use daily repeat (matchDateTimeComponents: time) for reliability on iOS;
-      // Android still gets exact scheduling via androidScheduleMode.
-      const matchDaily = DateTimeComponents.time;
-
-      final payload = jsonEncode({
-        'type': type,
-        'scheduledDate': startDate.toIso8601String(),
-      });
-
-      await flutterLocalNotificationsPlugin.zonedSchedule(
-        id: startId,
-        title: title,
-        body: body,
-        scheduledDate: startDate,
-        notificationDetails: const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'daily_checkin_channel_v3',
-            'Daily Check-in',
-            channelDescription: 'Reminds you to check in daily',
-            importance: Importance.max,
-            priority: Priority.high,
-          ),
-          iOS: DarwinNotificationDetails(
-            presentAlert: true,
-            presentBadge: true,
-            presentSound: true,
-          ),
+      final notificationDetails = const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'daily_checkin_channel_v3',
+          'Daily Check-in',
+          channelDescription: 'Reminds you to check in daily',
+          importance: Importance.max,
+          priority: Priority.high,
         ),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        matchDateTimeComponents: matchDaily,
-        payload: payload,
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
       );
+
+      if (Platform.isIOS) {
+        // iOS: schedule multiple one-off notifications (matchDateTimeComponents can be unreliable on iOS).
+        for (int i = 0; i < _iosScheduleDays; i++) {
+          final tz.TZDateTime notificationDate = startDate.add(Duration(days: i));
+          final payload = jsonEncode({
+            'type': type,
+            'scheduledDate': notificationDate.toIso8601String(),
+          });
+          try {
+            await flutterLocalNotificationsPlugin.zonedSchedule(
+              id: startId + i,
+              title: title,
+              body: body,
+              scheduledDate: notificationDate,
+              notificationDetails: notificationDetails,
+              androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+              payload: payload,
+            );
+          } catch (e) {
+            debugPrint('iOS schedule notification $type day $i: $e');
+          }
+        }
+        debugPrint('Scheduled $_iosScheduleDays days of $type notifications on iOS');
+      } else {
+        // Android: one recurring daily notification.
+        final payload = jsonEncode({
+          'type': type,
+          'scheduledDate': startDate.toIso8601String(),
+        });
+        await flutterLocalNotificationsPlugin.zonedSchedule(
+          id: startId,
+          title: title,
+          body: body,
+          scheduledDate: startDate,
+          notificationDetails: notificationDetails,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          matchDateTimeComponents: DateTimeComponents.time,
+          payload: payload,
+        );
+      }
     } catch (e) {
       debugPrint('ERROR scheduling notification ($type): $e');
     }
   }
 
   Future<void> completeDailyCheckIn(TimeOfDay checkInTime) async {
-    // 1. Cancel the follow-up reminder (id 100) for today; daily check-in (id 0) keeps recurring.
-    await flutterLocalNotificationsPlugin.cancel(id: 100);
+    // 1. Cancel follow-up reminders (id 100 on Android; 100..129 on iOS).
+    for (int i = 0; i < _iosScheduleDays; i++) {
+      await flutterLocalNotificationsPlugin.cancel(id: 100 + i);
+    }
     // Cancel any pending emergency SMS task since user checked in
     await BackgroundService().cancelEmergencySms();
     
