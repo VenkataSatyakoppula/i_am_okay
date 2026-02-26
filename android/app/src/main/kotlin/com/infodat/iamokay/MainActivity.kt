@@ -1,4 +1,4 @@
-package com.example.i_am_okay
+package com.infodat.iamokay
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

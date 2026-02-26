@@ -14,11 +14,7 @@ import '../models/user_model.dart';
 import '../models/checkin_model.dart';
 
 class GraphQLService {
-  static final HttpLink _httpLink = HttpLink(
-    Platform.isAndroid 
-        ? AppConfig.apiUrl 
-        : 'http://localhost:5200/graphql',
-  );
+  static final HttpLink _httpLink = HttpLink(AppConfig.apiUrl);
 
   static const _storage = FlutterSecureStorage();
   static const _userCacheKey = 'cached_user';
@@ -57,15 +53,15 @@ class GraphQLService {
     );
   }
 
-  static Future<String?> requestOtp(String mobile, {bool isRegister = false}) async {
+  static Future<String?> requestOtp(
+    String mobile, {
+    bool isRegister = false,
+  }) async {
     final client = await getClient();
     final result = await client.mutate(
       MutationOptions(
         document: gql(requestOtpMutation),
-        variables: {
-          'mobile': mobile,
-          'isRegister': isRegister,
-        },
+        variables: {'mobile': mobile, 'isRegister': isRegister},
       ),
     );
 
@@ -76,7 +72,12 @@ class GraphQLService {
     return result.data?['requestOtp'] as String?;
   }
 
-  static Future<AuthPayload> verifyOtp(String mobile, String otp, {Map<String, dynamic>? userDetails, bool isEmergencyContact = false}) async {
+  static Future<AuthPayload> verifyOtp(
+    String mobile,
+    String otp, {
+    Map<String, dynamic>? userDetails,
+    bool isEmergencyContact = false,
+  }) async {
     final client = await getClient();
     final result = await client.mutate(
       MutationOptions(
@@ -129,10 +130,7 @@ class GraphQLService {
   static Future<User?> getUser(String id) async {
     final client = await getClient();
     final result = await client.query(
-      QueryOptions(
-        document: gql(getUserQuery),
-        variables: {'id': id},
-      ),
+      QueryOptions(document: gql(getUserQuery), variables: {'id': id}),
     );
 
     if (result.hasException) {
@@ -150,10 +148,7 @@ class GraphQLService {
   static Future<List<User>> getUsers({Map<String, dynamic>? where}) async {
     final client = await getClient();
     final result = await client.query(
-      QueryOptions(
-        document: gql(getUsersQuery),
-        variables: {'where': where},
-      ),
+      QueryOptions(document: gql(getUsersQuery), variables: {'where': where}),
     );
 
     if (result.hasException) {
@@ -161,18 +156,21 @@ class GraphQLService {
     }
 
     final data = result.data?['users'] as List<dynamic>?;
-    return data?.map((e) => User.fromJson(e as Map<String, dynamic>)).toList() ?? [];
+    return data
+            ?.map((e) => User.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        [];
   }
 
-  static Future<bool> checkUserExists({String? mobileNumber, String? email}) async {
+  static Future<bool> checkUserExists({
+    String? mobileNumber,
+    String? email,
+  }) async {
     final client = await getClient();
     final result = await client.query(
       QueryOptions(
         document: gql(checkUserExistsQuery),
-        variables: {
-          'mobileNumber': mobileNumber,
-          'email': email,
-        },
+        variables: {'mobileNumber': mobileNumber, 'email': email},
         fetchPolicy: FetchPolicy.networkOnly,
       ),
     );
@@ -210,10 +208,7 @@ class GraphQLService {
     final result = await client.mutate(
       MutationOptions(
         document: gql(updateUserMutation),
-        variables: {
-          'id': id,
-          'input': input,
-        },
+        variables: {'id': id, 'input': input},
       ),
     );
 
@@ -232,10 +227,7 @@ class GraphQLService {
   static Future<bool> deleteUser(String id) async {
     final client = await getClient();
     final result = await client.mutate(
-      MutationOptions(
-        document: gql(deleteUserMutation),
-        variables: {'id': id},
-      ),
+      MutationOptions(document: gql(deleteUserMutation), variables: {'id': id}),
     );
 
     if (result.hasException) {
@@ -249,10 +241,7 @@ class GraphQLService {
   static Future<CheckIn?> getCheckIn(String id) async {
     final client = await getClient();
     final result = await client.query(
-      QueryOptions(
-        document: gql(getCheckInQuery),
-        variables: {'id': id},
-      ),
+      QueryOptions(document: gql(getCheckInQuery), variables: {'id': id}),
     );
 
     if (result.hasException) {
@@ -263,7 +252,9 @@ class GraphQLService {
     return data != null ? CheckIn.fromJson(data) : null;
   }
 
-  static Future<List<CheckIn>> getCheckIns({Map<String, dynamic>? where}) async {
+  static Future<List<CheckIn>> getCheckIns({
+    Map<String, dynamic>? where,
+  }) async {
     final client = await getClient();
     final result = await client.query(
       QueryOptions(
@@ -277,13 +268,18 @@ class GraphQLService {
     }
 
     final data = result.data?['checkIns'] as List<dynamic>?;
-    return data?.map((e) => CheckIn.fromJson(e as Map<String, dynamic>)).toList() ?? [];
+    return data
+            ?.map((e) => CheckIn.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        [];
   }
 
   static Future<List<CheckIn>> getCheckInsByContactId(String contactId) async {
-    return getCheckIns(where: {
-      'userId': {'eq': contactId}
-    });
+    return getCheckIns(
+      where: {
+        'userId': {'eq': contactId},
+      },
+    );
   }
 
   // CheckIn Mutations
@@ -303,15 +299,15 @@ class GraphQLService {
     return CheckIn.fromJson(result.data?['createCheckIn']);
   }
 
-  static Future<CheckIn?> updateCheckIn(String id, Map<String, dynamic> input) async {
+  static Future<CheckIn?> updateCheckIn(
+    String id,
+    Map<String, dynamic> input,
+  ) async {
     final client = await getClient();
     final result = await client.mutate(
       MutationOptions(
         document: gql(updateCheckInMutation),
-        variables: {
-          'id': id,
-          'input': input,
-        },
+        variables: {'id': id, 'input': input},
       ),
     );
 
@@ -338,5 +334,4 @@ class GraphQLService {
 
     return result.data?['deleteCheckIn'] as bool;
   }
-
 }
