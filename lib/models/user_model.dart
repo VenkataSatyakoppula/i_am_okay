@@ -164,12 +164,16 @@ class EmergencyContact {
   final String? relation;
   final String? phone;
   final String? email;
+  final bool? smsOptIn;
+  final bool? smsEnabled;
 
   EmergencyContact({
     this.name,
     this.relation,
     this.phone,
     this.email,
+    this.smsOptIn,
+    this.smsEnabled,
   });
 
   factory EmergencyContact.fromJson(Map<String, dynamic> json) {
@@ -178,6 +182,8 @@ class EmergencyContact {
       relation: json['relation'] as String?,
       phone: json['phone'] as String?,
       email: json['email'] as String?,
+      smsOptIn: json['smsOptIn'] as bool?,
+      smsEnabled: json['smsEnabled'] as bool?,
     );
   }
 
@@ -187,6 +193,7 @@ class EmergencyContact {
       'relation': relation,
       'phone': phone,
       'email': email,
+      'smsOptIn': smsOptIn,
     };
   }
 }

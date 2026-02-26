@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../models/user_model.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_dropdown_field.dart';
@@ -33,6 +34,7 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
   final _emailFocus = FocusNode();
 
   final _formKey = GlobalKey<FormState>();
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   // Track which contact is being edited. Null means adding a new contact.
   int? _editingIndex;
@@ -55,22 +57,46 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
     super.dispose();
   }
 
+  void _applyContactsFromUser(User user) {
+    if (user.emergencyContacts.isEmpty) return;
+    _contacts.clear();
+    _contacts.addAll(user.emergencyContacts.map((c) => {
+          'name': c.name ?? '',
+          'relation': c.relation ?? 'Other',
+          'phone': c.phone ?? '',
+          'email': c.email,
+          'smsOptIn': c.smsOptIn ?? true,
+          'smsEnabled': c.smsEnabled ?? false,
+        }));
+    _isFormVisible = _contacts.isEmpty;
+  }
+
   Future<void> _fetchContacts() async {
     try {
+      // Show cached contacts immediately so no spinner when navigating
+      final cachedUser = await GraphQLService.getCachedUser();
+      if (mounted && cachedUser != null) {
+        setState(() {
+          if (cachedUser.emergencyContacts.isNotEmpty) {
+            _applyContactsFromUser(cachedUser);
+          }
+          _isFormVisible = _contacts.isEmpty;
+          _isLoading = false;
+        });
+      }
+
       final userId = await _storage.read(key: 'user_id');
-      if (userId != null) {
-        final user = await GraphQLService.getUser(userId);
-        if (mounted && user != null && user.emergencyContacts.isNotEmpty) {
-          setState(() {
-            _contacts.addAll(user.emergencyContacts.map((c) => {
-                  'name': c.name ?? '',
-                  'relation': c.relation ?? 'Other',
-                  'phone': c.phone ?? '',
-                  'email': c.email,
-                }));
-            _isFormVisible = _contacts.isEmpty;
-          });
-        }
+      if (userId == null) {
+        if (mounted && _isLoading) setState(() => _isLoading = false);
+        return;
+      }
+
+      final user = await GraphQLService.getUser(userId);
+      if (mounted && user != null) {
+        setState(() {
+          _contacts.clear();
+          _applyContactsFromUser(user);
+        });
       }
     } catch (e) {
       debugPrint('Error fetching contacts: $e');
@@ -110,6 +136,7 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
           'email': (c['email'] == null || c['email'].toString().isEmpty)
               ? null
               : c['email'],
+          'smsOptIn': c['smsOptIn'] == true,
         };
       }).toList();
 
@@ -118,22 +145,36 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
       });
 
       if (mounted && showSuccessMessage) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Contacts updated successfully'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 1),
-          ),
-        );
+        final scaffoldContext = _scaffoldKey.currentContext;
+        if (scaffoldContext != null) {
+          ScaffoldMessenger.of(scaffoldContext).clearSnackBars();
+          ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+            const SnackBar(
+              content: Text('Contacts updated successfully'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('Emergency contacts sync error: $e');
+      debugPrint('$stackTrace');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to sync contacts. Please check your connection.'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        final scaffoldContext = _scaffoldKey.currentContext;
+        if (scaffoldContext != null) {
+          final message = _contacts.isEmpty
+              ? 'Could not clear all contacts. Please check your connection or try again.'
+              : 'Failed to sync contacts. Please check your connection.';
+          ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+            SnackBar(
+              content: Text(message),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
     }
   }
@@ -190,12 +231,15 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
       'name': _nameController.text.trim(),
       'phone': _phoneController.text.trim(),
       'email': _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
+      'smsOptIn': _hasConsented,
+      'smsEnabled': false,
     };
 
     setState(() {
       if (_editingIndex != null) {
-        // Update existing
-        _contacts[_editingIndex!] = newContact;
+        // Update existing; preserve smsEnabled (read-only from backend)
+        final existing = _contacts[_editingIndex!];
+        _contacts[_editingIndex!] = {...newContact, 'smsEnabled': existing['smsEnabled'] ?? false};
         _editingIndex = null;
       } else {
         // Add new
@@ -255,7 +299,7 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
       _emailController.text = contact['email'] ?? '';
       _selectedRelation = contact['relation'];
       
-      _hasConsented = false;
+      _hasConsented = contact['smsOptIn'] == true;
       _isFormVisible = true;
     });
   }
@@ -306,6 +350,7 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: const Color(0xFFFFFFFF),
       appBar: widget.isOnboarding
           ? AppBar(
@@ -356,12 +401,35 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              contact['name']!,
-                              style: const TextStyle(
-                                fontSize: 18.0,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            Row(
+                              children: [
+                                Text(
+                                  contact['name']!,
+                                  style: const TextStyle(
+                                    fontSize: 18.0,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                if (contact['smsEnabled'] == true) ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF1F4ED8).withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(color: const Color(0xFF1F4ED8), width: 1),
+                                    ),
+                                    child: const Text(
+                                      'Verified',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF1F4ED8),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                             Text('${contact['relation']} • ${_formatPhoneDisplay(contact['phone'])}'),
                           ],
@@ -385,8 +453,8 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
                 const SizedBox(height: 16),
               ],
 
-              // Add Contact Form
-              if (_contacts.length < 3) ...[
+              // Add Contact Form (show when under 3 contacts or when editing one)
+              if (_contacts.length < 3 || _editingIndex != null) ...[
                 if (_isFormVisible)
                   Form(
                     key: _formKey,
@@ -444,6 +512,8 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
                           hint: 'Enter phone number',
                           keyboardType: TextInputType.phone,
                           controller: _phoneController,
+                          readOnly: _editingIndex != null &&
+                              (_contacts[_editingIndex!]['smsEnabled'] == true),
                           inputFormatters: [PhoneInputFormatter()],
                           focusNode: _phoneFocus,
                           textInputAction: TextInputAction.next,
@@ -461,6 +531,18 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
                             return null;
                           },
                         ),
+                        if (_editingIndex != null &&
+                            (_contacts[_editingIndex!]['smsEnabled'] == true))
+                          const Padding(
+                            padding: EdgeInsets.only(top: 6.0),
+                            child: Text(
+                              'Phone number cannot be changed for verified contacts.',
+                              style: TextStyle(
+                                fontSize: 12.0,
+                                color: Color(0xFF6B7280),
+                              ),
+                            ),
+                          ),
                         const SizedBox(height: 16),
                         CustomTextField(
                           label: 'Email',

@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:timezone/timezone.dart' as tz;
+import '../models/user_model.dart';
 import '../services/graphql_service.dart';
 import '../services/notification_service.dart';
 import '../widgets/loading_overlay.dart';
@@ -139,64 +140,78 @@ class _HomeContentState extends State<HomeContent>
   TimeOfDay? _checkInTimeOfDay;
   bool _isPaused = false;
   DateTime? _pausedUntil;
+  /// Prevents showing placeholder header until cache has been read.
+  bool _hasInitialLoad = false;
+
+  void _applyUserToState(User user) {
+    final firstName = user.name?.firstName ?? '';
+    final lastName = user.name?.lastName ?? '';
+    _userName = '$firstName $lastName'.trim();
+    _userAlias = user.name?.alias;
+
+    if (_userName!.isEmpty) {
+      _userName = _userAlias;
+      _userAlias = null;
+    } else if (_userAlias == _userName) {
+      _userAlias = null;
+    }
+
+    if (user.reminderSettings != null) {
+      _isPaused = user.reminderSettings!.isPaused ?? false;
+      _pausedUntil = user.reminderSettings!.pausedUntil;
+
+      if (user.reminderSettings!.checkInTime != null) {
+        final timeParts = user.reminderSettings!.checkInTime!.split(':');
+        if (timeParts.length == 2) {
+          final time = TimeOfDay(
+            hour: int.parse(timeParts[0]),
+            minute: int.parse(timeParts[1]),
+          );
+          _checkInTimeOfDay = time;
+          _reminderTime = time.format(context);
+        }
+      }
+    }
+  }
 
   Future<void> _fetchUserData() async {
     try {
+      // Show cached user immediately so no placeholder flash when navigating to Home
+      final cachedUser = await GraphQLService.getCachedUser();
+      if (mounted) {
+        setState(() {
+          _hasInitialLoad = true;
+          if (cachedUser != null) {
+            _applyUserToState(cachedUser);
+          }
+        });
+      }
+
       final userId = await _storage.read(key: 'user_id');
-      if (userId != null) {
-        final user = await GraphQLService.getUser(userId);
-        if (mounted && user != null) {
-          setState(() {
-            final firstName = user.name?.firstName ?? '';
-            final lastName = user.name?.lastName ?? '';
-            _userName = '$firstName $lastName'.trim();
-            _userAlias = user.name?.alias;
-            
-            if (_userName!.isEmpty) {
-              _userName = _userAlias;
-              _userAlias = null; // Don't show alias if it's the same as name
-            } else if (_userAlias == _userName) {
-              _userAlias = null;
+      if (userId == null) return;
+
+      final user = await GraphQLService.getUser(userId);
+      if (mounted && user != null) {
+        setState(() {
+          _applyUserToState(user);
+        });
+
+        // Handle notifications outside setState
+        if (user.reminderSettings != null && user.reminderSettings!.checkInTime != null) {
+          final timeParts = user.reminderSettings!.checkInTime!.split(':');
+          if (timeParts.length == 2) {
+            final time = TimeOfDay(
+              hour: int.parse(timeParts[0]),
+              minute: int.parse(timeParts[1]),
+            );
+            final isPaused = user.reminderSettings!.isPaused ?? false;
+            final pausedUntil = user.reminderSettings!.pausedUntil;
+
+            if (!isPaused || (pausedUntil != null && DateTime.now().isAfter(pausedUntil))) {
+              await NotificationService().scheduleDailyNotification(time);
+            } else {
+              await NotificationService().cancelAllNotifications();
             }
-
-            if (user.reminderSettings != null) {
-              _isPaused = user.reminderSettings!.isPaused ?? false;
-              _pausedUntil = user.reminderSettings!.pausedUntil;
-
-              if (user.reminderSettings!.checkInTime != null) {
-                final timeParts = user.reminderSettings!.checkInTime!.split(':');
-                if (timeParts.length == 2) {
-                  final time = TimeOfDay(
-                    hour: int.parse(timeParts[0]),
-                    minute: int.parse(timeParts[1]),
-                  );
-                  _checkInTimeOfDay = time;
-                  _reminderTime = time.format(context);
-                }
-              }
-            }
-          });
-
-          // Handle notifications outside setState
-          if (user.reminderSettings != null && user.reminderSettings!.checkInTime != null) {
-             final timeParts = user.reminderSettings!.checkInTime!.split(':');
-             if (timeParts.length == 2) {
-               final time = TimeOfDay(
-                 hour: int.parse(timeParts[0]),
-                 minute: int.parse(timeParts[1]),
-               );
-               final isPaused = user.reminderSettings!.isPaused ?? false;
-               final pausedUntil = user.reminderSettings!.pausedUntil;
-               
-
-               // Schedule if not paused OR if the pause duration has expired
-               // ignoring pausedUntil if isPaused is false
-               if (!isPaused || (pausedUntil != null && DateTime.now().isAfter(pausedUntil))) {
-                  await NotificationService().scheduleDailyNotification(time);
-               } else {
-                  await NotificationService().cancelAllNotifications();
-               }
-             }
           }
         }
       }
@@ -643,10 +658,16 @@ class _HomeContentState extends State<HomeContent>
   }
 
   Widget _buildHeader() {
+    if (!_hasInitialLoad) {
+      return const Padding(
+        padding: EdgeInsets.fromLTRB(24, 24, 24, 48),
+        child: SizedBox(height: 100),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 48),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           if (_userName != null && _userName!.isNotEmpty)
             Text(

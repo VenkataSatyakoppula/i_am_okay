@@ -129,6 +129,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
       if (user != null) {
         await _storage.write(key: 'user_id', value: user.id);
+        await GraphQLService.saveUserToCache(user);
       }
       if (widget.role != null) {
         await _storage.write(key: 'user_role', value: widget.role);

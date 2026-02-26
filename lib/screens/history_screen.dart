@@ -103,7 +103,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
               ElevatedButton(
                 onPressed: () {
                   setState(() {
-                    _isLoading = true;
                     _errorMessage = null;
                   });
                   _fetchCheckIns();

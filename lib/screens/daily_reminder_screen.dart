@@ -31,19 +31,37 @@ class _DailyReminderScreenState extends State<DailyReminderScreen> {
 
   Future<void> _fetchCurrentReminder() async {
     try {
+      // Show cached reminder time immediately so no spinner when navigating
+      final cachedUser = await GraphQLService.getCachedUser();
+      if (mounted && cachedUser?.reminderSettings?.checkInTime != null) {
+        final timeParts = cachedUser!.reminderSettings!.checkInTime!.split(':');
+        if (timeParts.length == 2) {
+          setState(() {
+            _selectedTime = TimeOfDay(
+              hour: int.parse(timeParts[0]),
+              minute: int.parse(timeParts[1]),
+            );
+            _isLoading = false;
+          });
+        }
+      }
+
       final userId = await _storage.read(key: 'user_id');
-      if (userId != null) {
-        final user = await GraphQLService.getUser(userId);
-        if (mounted && user?.reminderSettings?.checkInTime != null) {
-          final timeParts = user!.reminderSettings!.checkInTime!.split(':');
-          if (timeParts.length == 2) {
-            setState(() {
-              _selectedTime = TimeOfDay(
-                hour: int.parse(timeParts[0]),
-                minute: int.parse(timeParts[1]),
-              );
-            });
-          }
+      if (userId == null) {
+        if (mounted) setState(() => _isLoading = false);
+        return;
+      }
+
+      final user = await GraphQLService.getUser(userId);
+      if (mounted && user?.reminderSettings?.checkInTime != null) {
+        final timeParts = user!.reminderSettings!.checkInTime!.split(':');
+        if (timeParts.length == 2) {
+          setState(() {
+            _selectedTime = TimeOfDay(
+              hour: int.parse(timeParts[0]),
+              minute: int.parse(timeParts[1]),
+            );
+          });
         }
       }
     } catch (e) {

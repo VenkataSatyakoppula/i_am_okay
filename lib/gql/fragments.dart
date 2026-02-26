@@ -22,6 +22,8 @@ const String userFragment = """
       relation
       phone
       email
+      smsOptIn
+      smsEnabled
     }
     reminderSettings {
       checkInTime

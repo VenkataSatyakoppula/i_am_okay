@@ -15,6 +15,7 @@ class CustomTextField extends StatelessWidget {
   final FocusNode? focusNode;
   final String? Function(String?)? validator;
   final AutovalidateMode autovalidateMode;
+  final bool readOnly;
 
   const CustomTextField({
     super.key,
@@ -30,6 +31,7 @@ class CustomTextField extends StatelessWidget {
     this.focusNode,
     this.validator,
     this.autovalidateMode = AutovalidateMode.onUserInteraction,
+    this.readOnly = false,
   });
 
   @override
@@ -71,6 +73,7 @@ class CustomTextField extends StatelessWidget {
         TextFormField(
           controller: controller,
           focusNode: focusNode,
+          readOnly: readOnly,
           keyboardType: keyboardType,
           maxLines: maxLines,
           inputFormatters: inputFormatters,

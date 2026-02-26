@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -20,6 +21,7 @@ class GraphQLService {
   );
 
   static const _storage = FlutterSecureStorage();
+  static const _userCacheKey = 'cached_user';
 
   static ValueNotifier<GraphQLClient> initClient() {
     final AuthLink authLink = AuthLink(
@@ -95,6 +97,34 @@ class GraphQLService {
     return AuthPayload.fromJson(result.data?['verifyOtp']);
   }
 
+  // User cache
+  static Future<void> _saveUserToCache(User user) async {
+    await _storage.write(
+      key: _userCacheKey,
+      value: jsonEncode(user.toJson()),
+    );
+  }
+
+  /// Call after login (e.g. verifyOtp) to cache the user. Also used internally after getUser/updateUser.
+  static Future<void> saveUserToCache(User user) async {
+    await _saveUserToCache(user);
+  }
+
+  static Future<User?> getCachedUser() async {
+    final jsonStr = await _storage.read(key: _userCacheKey);
+    if (jsonStr == null || jsonStr.isEmpty) return null;
+    try {
+      final data = jsonDecode(jsonStr) as Map<String, dynamic>;
+      return User.fromJson(data);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> clearUserCache() async {
+    await _storage.delete(key: _userCacheKey);
+  }
+
   // User Queries
   static Future<User?> getUser(String id) async {
     final client = await getClient();
@@ -110,7 +140,11 @@ class GraphQLService {
     }
 
     final data = result.data?['user'];
-    return data != null ? User.fromJson(data) : null;
+    final user = data != null ? User.fromJson(data) : null;
+    if (user != null) {
+      await _saveUserToCache(user);
+    }
+    return user;
   }
 
   static Future<List<User>> getUsers({Map<String, dynamic>? where}) async {
@@ -188,7 +222,11 @@ class GraphQLService {
     }
 
     final data = result.data?['updateUser'];
-    return data != null ? User.fromJson(data) : null;
+    final user = data != null ? User.fromJson(data) : null;
+    if (user != null) {
+      await _saveUserToCache(user);
+    }
+    return user;
   }
 
   static Future<bool> deleteUser(String id) async {

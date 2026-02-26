@@ -31,7 +31,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _fetchUser() async {
-    // Immediately try to get local data to build a basic UI
+    // Show cached user immediately so no spinner when navigating to Settings
+    final cachedUser = await GraphQLService.getCachedUser();
+    if (mounted && cachedUser != null) {
+      setState(() {
+        _user = cachedUser;
+        _isLoading = false;
+      });
+    }
+
     final userId = await _storage.read(key: 'user_id');
     final mobileNumber = await _storage.read(key: 'mobile_number');
 
@@ -39,36 +47,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = "User not found locally. Please login again.";
+          _errorMessage = _user == null ? "User not found locally. Please login again." : null;
         });
       }
       return;
     }
 
-    // Build a minimal user object for offline display
-    if (mounted) {
+    // If no cache, show minimal user so we don't block the UI
+    if (mounted && _user == null) {
       setState(() {
         _user = User(id: userId, mobileNumber: mobileNumber ?? '');
-        _isLoading = false; // We have enough to show a basic profile
+        _isLoading = false;
       });
     }
 
-    // Now, try to fetch the full profile from the network
+    // Fetch full profile from network and update
     try {
       final user = await GraphQLService.getUser(userId);
-      if (mounted) {
+      if (mounted && user != null) {
         setState(() {
-          _user = user; // Update with full profile data
+          _user = user;
         });
       }
     } catch (e) {
-      // Non-blocking error. The user can still see their basic profile and log out.
-      // Optionally, show a snackbar or a small message.
       debugPrint("Failed to fetch full profile: $e");
-      if (mounted) {
-        // You could set a different state here to show a small warning icon
-        // e.g., setState(() { _isOffline = true; });
-      }
     }
   }
 
@@ -154,6 +156,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final fullName =
         "${_user?.name?.firstName ?? ''} ${_user?.name?.lastName ?? ''}".trim();
     final displayName = fullName.isNotEmpty ? fullName : "User";
+    final alias = _user?.name?.alias?.trim();
+    final hasAlias = alias != null && alias.isNotEmpty;
 
     return Column(
       children: [
@@ -177,6 +181,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
             color: Color(0xFF333333),
           ),
         ),
+        if (hasAlias) ...[
+          const SizedBox(height: 4),
+          Text(
+            alias!,
+            style: const TextStyle(
+              fontSize: 16.0,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF666666),
+            ),
+          ),
+        ],
         const SizedBox(height: 8),
         Text(
           _formatPhoneNumber(_user?.mobileNumber ?? ''),
@@ -364,6 +379,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // Cancel all notifications on logout
     await NotificationService().cancelAllNotifications();
 
+    await GraphQLService.clearUserCache();
     await _storage.deleteAll();
     if (mounted) {
       Navigator.pushAndRemoveUntil(

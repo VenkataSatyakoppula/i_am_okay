@@ -13,7 +13,7 @@ class ContactDashboardScreen extends StatefulWidget {
 
 class _ContactDashboardScreenState extends State<ContactDashboardScreen> {
   final _storage = const FlutterSecureStorage();
-  bool _isLoading = true;
+  bool _isLoading = false;
   List<User> _usersWhoAddedMe = [];
 
   @override

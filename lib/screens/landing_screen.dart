@@ -108,27 +108,14 @@ class _LandingScreenState extends State<LandingScreen>
                       scale: _scaleAnimation,
                       child: FadeTransition(
                         opacity: _fadeAnimation,
-                        child: SvgPicture.asset(
-                          'assets/icons/landing_logo.svg',
+                        child: Image.asset(
+                          'assets/icons/Logo.png',
                           height: 100, // Adjust height as needed to match previous icon size
-                          colorFilter: const ColorFilter.mode(
-                            Color(0xFF1F4ED8),
-                            BlendMode.srcIn,
-                          ),
                         ),
                       ),
                     ),
                   ),
-              const Center(
-                child: Text(
-                  'I Am Okay',
-                  style: TextStyle(
-                    fontSize: 34.0, // Main heading: 28-34
-                    fontWeight: FontWeight.w600, // SemiBold (600)
-                    color: Color(0xFF000000), // Primary Text
-                  ),
-                ),
-              ),
+
               const SizedBox(height: 16),
               const Center(
                 child: Text(
