@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:workmanager/workmanager.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
@@ -9,11 +10,14 @@ import '../gql/mutations/emergency_mutations.dart';
 
 const String emergencySmsTask = "emergencySmsTask";
 
+/// On iOS, processing tasks report unique name (e.g. emergency_sms_0); on Android, task name.
+bool _isEmergencySmsTask(String task) =>
+    task == emergencySmsTask || task.startsWith('emergency_sms_');
+
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    switch (task) {
-      case emergencySmsTask:
+    if (_isEmergencySmsTask(task)) {
         try {
           debugPrint("Starting emergency SMS task");
           
@@ -83,6 +87,9 @@ void callbackDispatcher() {
   });
 }
 
+/// Number of days we schedule emergency SMS for (must match iOS AppDelegate/Info.plist identifiers).
+const int emergencySmsTaskCount = 15;
+
 class BackgroundService {
   static final BackgroundService _instance = BackgroundService._internal();
   factory BackgroundService() => _instance;
@@ -98,23 +105,37 @@ class BackgroundService {
     // Cancel any existing tasks
     await cancelEmergencySms();
 
-    debugPrint("Scheduling emergency SMS sequence for 15 days starting from $startDate");
+    debugPrint("Scheduling emergency SMS sequence for $emergencySmsTaskCount days starting from $startDate");
 
-    for (int i = 0; i < 15; i++) {
+    for (int i = 0; i < emergencySmsTaskCount; i++) {
       final emergencyTime = startDate.add(Duration(days: i)).add(const Duration(minutes: AppConfig.emergencySmsDelayMinutes));
       final delay = emergencyTime.difference(DateTime.now());
 
       if (!delay.isNegative) {
-        await Workmanager().registerOneOffTask(
-          "emergency_sms_$i",
-          emergencySmsTask,
-          initialDelay: delay,
-          constraints: Constraints(
-            networkType: NetworkType.connected,
-          ),
-          inputData: {},
-          existingWorkPolicy: ExistingWorkPolicy.replace,
-        );
+        if (Platform.isIOS) {
+          // iOS: use BGProcessingTask so the task can be scheduled for a future time.
+          // registerOneOffTask on iOS runs immediately and does not honor initialDelay.
+          await Workmanager().registerProcessingTask(
+            "emergency_sms_$i",
+            emergencySmsTask,
+            initialDelay: delay,
+            constraints: Constraints(
+              networkType: NetworkType.connected,
+            ),
+            inputData: {},
+          );
+        } else {
+          await Workmanager().registerOneOffTask(
+            "emergency_sms_$i",
+            emergencySmsTask,
+            initialDelay: delay,
+            constraints: Constraints(
+              networkType: NetworkType.connected,
+            ),
+            inputData: {},
+            existingWorkPolicy: ExistingWorkPolicy.replace,
+          );
+        }
         debugPrint("Scheduled emergency SMS task for day $i with delay: ${delay.inMinutes} minutes");
       }
     }

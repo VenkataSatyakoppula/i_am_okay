@@ -53,6 +53,24 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>emergency_sms_0</string>
+		<string>emergency_sms_1</string>
+		<string>emergency_sms_2</string>
+		<string>emergency_sms_3</string>
+		<string>emergency_sms_4</string>
+		<string>emergency_sms_5</string>
+		<string>emergency_sms_6</string>
+		<string>emergency_sms_7</string>
+		<string>emergency_sms_8</string>
+		<string>emergency_sms_9</string>
+		<string>emergency_sms_10</string>
+		<string>emergency_sms_11</string>
+		<string>emergency_sms_12</string>
+		<string>emergency_sms_13</string>
+		<string>emergency_sms_14</string>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
