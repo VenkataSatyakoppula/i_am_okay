@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'dart:io';
 import '../config.dart';
 import '../gql/mutations/auth_mutations.dart';
 import '../gql/queries/user_queries.dart';
@@ -18,6 +17,15 @@ class GraphQLService {
 
   static const _storage = FlutterSecureStorage();
   static const _userCacheKey = 'cached_user';
+
+  static void _logError(String methodName, dynamic exception) {
+    debugPrint('❌ GraphQLService.$methodName ERROR');
+    debugPrint('   Exception: $exception');
+    if (exception is OperationException) {
+      debugPrint('   GraphQL Errors: ${exception.graphqlErrors}');
+      debugPrint('   Link Exception: ${exception.linkException}');
+    }
+  }
 
   static ValueNotifier<GraphQLClient> initClient() {
     final AuthLink authLink = AuthLink(
@@ -57,19 +65,25 @@ class GraphQLService {
     String mobile, {
     bool isRegister = false,
   }) async {
-    final client = await getClient();
-    final result = await client.mutate(
-      MutationOptions(
-        document: gql(requestOtpMutation),
-        variables: {'mobile': mobile, 'isRegister': isRegister},
-      ),
-    );
+    try {
+      final client = await getClient();
+      final result = await client.mutate(
+        MutationOptions(
+          document: gql(requestOtpMutation),
+          variables: {'mobile': mobile, 'isRegister': isRegister},
+        ),
+      );
 
-    if (result.hasException) {
-      throw result.exception!;
+      if (result.hasException) {
+        _logError('requestOtp', result.exception);
+        throw result.exception!;
+      }
+
+      return result.data?['requestOtp'] as String?;
+    } catch (e) {
+      _logError('requestOtp', e);
+      rethrow;
     }
-
-    return result.data?['requestOtp'] as String?;
   }
 
   static Future<AuthPayload> verifyOtp(
@@ -78,32 +92,35 @@ class GraphQLService {
     Map<String, dynamic>? userDetails,
     bool isEmergencyContact = false,
   }) async {
-    final client = await getClient();
-    final result = await client.mutate(
-      MutationOptions(
-        document: gql(verifyOtpMutation),
-        variables: {
-          'mobile': mobile,
-          'otp': otp,
-          'userDetails': userDetails,
-          'isEmergencyContact': isEmergencyContact,
-        },
-      ),
-    );
+    try {
+      final client = await getClient();
+      final result = await client.mutate(
+        MutationOptions(
+          document: gql(verifyOtpMutation),
+          variables: {
+            'mobile': mobile,
+            'otp': otp,
+            'userDetails': userDetails,
+            'isEmergencyContact': isEmergencyContact,
+          },
+        ),
+      );
 
-    if (result.hasException) {
-      throw result.exception!;
+      if (result.hasException) {
+        _logError('verifyOtp', result.exception);
+        throw result.exception!;
+      }
+
+      return AuthPayload.fromJson(result.data?['verifyOtp']);
+    } catch (e) {
+      _logError('verifyOtp', e);
+      rethrow;
     }
-
-    return AuthPayload.fromJson(result.data?['verifyOtp']);
   }
 
   // User cache
   static Future<void> _saveUserToCache(User user) async {
-    await _storage.write(
-      key: _userCacheKey,
-      value: jsonEncode(user.toJson()),
-    );
+    await _storage.write(key: _userCacheKey, value: jsonEncode(user.toJson()));
   }
 
   /// Call after login (e.g. verifyOtp) to cache the user. Also used internally after getUser/updateUser.

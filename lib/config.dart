@@ -1,6 +1,6 @@
 class AppConfig {
   // TODO: Update this URL with current tunnel URL
-  static const String apiUrl = 'https://jhclxnt3-5200.usw3.devtunnels.ms/graphql';
+  static const String apiUrl = 'https://iamokay-hgbve4gpf9bee7d0.centralus-01.azurewebsites.net/graphql';
 
   // Notification Settings
   static const int followUpReminderDelayMinutes = 1;
