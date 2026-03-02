@@ -1,4 +1,5 @@
 import 'package:IamOkay/screens/biometric_setup_screen.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -228,47 +229,56 @@ class _OtpScreenState extends State<OtpScreen> {
             right: 24.0,
             bottom: MediaQuery.viewInsetsOf(context).bottom,
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Spacer(),
-              const Icon(
-                Icons.lock_outline,
-                size: 80,
-                color: Color(0xFF1F4ED8),
-              ),
-              const SizedBox(height: 16),
-              const Center(
-                child: Text(
-                  'Verification',
-                  style: TextStyle(
-                    fontSize: 28.0,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF000000),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Center(
-                child: Text(
-                  'We have sent a one-time password to your mobile number.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF333333),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 48),
-              CustomTextField(
-                label: 'OTP Code',
-                hint: 'Enter the 6-digit code',
-                keyboardType: TextInputType.number,
-                controller: _otpController,
-                scrollPadding: EdgeInsets.zero,
-              ),
+          child: _buildOtpContent(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOtpContent() {
+    final column = Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (Platform.isIOS) const SizedBox(height: 24) else const Spacer(),
+        const Icon(
+          Icons.lock_outline,
+          size: 80,
+          color: Color(0xFF1F4ED8),
+        ),
+        const SizedBox(height: 16),
+        const Center(
+          child: Text(
+            'Verification',
+            style: TextStyle(
+              fontSize: 28.0,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF000000),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Center(
+          child: Text(
+            'We have sent a one-time password to your mobile number.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 18.0,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF333333),
+            ),
+          ),
+        ),
+        const SizedBox(height: 48),
+        CustomTextField(
+          label: 'OTP Code',
+          hint: 'Enter the 6-digit code',
+          keyboardType: TextInputType.number,
+          controller: _otpController,
+          scrollPadding: Platform.isIOS
+              ? const EdgeInsets.only(top: 24, bottom: 80, left: 20, right: 20)
+              : null,
+        ),
               const SizedBox(height: 32),
               CustomButton(
                 text: 'Verify & Login',
@@ -288,11 +298,12 @@ class _OtpScreenState extends State<OtpScreen> {
                   ),
                 ),
               ),
-              const Spacer(),
-            ],
-          ),
-        ),
-      ),
+        if (Platform.isIOS) const SizedBox(height: 32) else const Spacer(),
+      ],
     );
+    if (Platform.isIOS) {
+      return SingleChildScrollView(child: column);
+    }
+    return column;
   }
 }

@@ -1,4 +1,5 @@
 import 'package:IamOkay/screens/landing_screen.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -224,128 +225,138 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           child: Form(
             key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Spacer(),
-                Center(
-                  child: SvgPicture.asset(
-                    'assets/icons/landing_logo.svg',
-                    height: 100,
-                    colorFilter: const ColorFilter.mode(
-                      Color(0xFF1F4ED8),
-                      BlendMode.srcIn,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Center(
-                  child: Text(
-                    widget.fromRegistration ? 'Welcome' : 'Welcome Back',
-                    style: const TextStyle(
-                      fontSize: 28.0,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF000000),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Center(
-                  child: Text(
-                    'Sign in to continue to your account',
-                    style: TextStyle(
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFF333333),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 48),
-                CustomTextField(
-                  label: 'Mobile Number',
-                  hint: 'Enter your mobile number',
-                  keyboardType: TextInputType.phone,
-                  controller: _mobileController,
-                  inputFormatters: [PhoneInputFormatter()],
-                  textInputAction: TextInputAction.done,
-                  onSubmitted: (_) => _handleLogin(),
-                  scrollPadding: EdgeInsets.zero,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter mobile number';
-                    }
-                    final digits = value.replaceAll(RegExp(r'\D'), '');
-                    if (digits.length != 10) {
-                      return 'Please enter a valid 10-digit number';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 32),
-                CustomButton(
-                  text: 'Sign In',
-                  onPressed: _handleLogin,
-                ),
-                if (_canUseBiometric && _mobileController.text.isNotEmpty) ...[
-                  const SizedBox(height: 24),
-                  Center(
-                    child: IconButton(
-                      iconSize: 48,
-                      icon: const Icon(
-                        Icons.fingerprint,
-                        color: Color(0xFF1F4ED8),
-                      ),
-                      onPressed: _attemptBiometric,
-                      tooltip: 'Login with Biometrics',
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Center(
-                    child: Text(
-                      'Tap to use Biometrics',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF666666),
-                      ),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      "Don't have an account? ",
-                      style: TextStyle(
-                        fontSize: 16.0,
-                        color: Color(0xFF333333),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const RegisterScreen()),
-                        );
-                      },
-                      child: const Text(
-                        'Register',
-                        style: TextStyle(
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF1F4ED8),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-              ],
-            ),
+            child: _buildFormContent(),
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildFormContent() {
+    final column = Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (Platform.isIOS) const SizedBox(height: 24) else const Spacer(),
+        Center(
+          child: SvgPicture.asset(
+            'assets/icons/landing_logo.svg',
+            height: 100,
+            colorFilter: const ColorFilter.mode(
+              Color(0xFF1F4ED8),
+              BlendMode.srcIn,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Center(
+          child: Text(
+            widget.fromRegistration ? 'Welcome' : 'Welcome Back',
+            style: const TextStyle(
+              fontSize: 28.0,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF000000),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Center(
+          child: Text(
+            'Sign in to continue to your account',
+            style: TextStyle(
+              fontSize: 18.0,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF333333),
+            ),
+          ),
+        ),
+        const SizedBox(height: 48),
+        CustomTextField(
+          label: 'Mobile Number',
+          hint: 'Enter your mobile number',
+          keyboardType: TextInputType.phone,
+          controller: _mobileController,
+          inputFormatters: [PhoneInputFormatter()],
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => _handleLogin(),
+          scrollPadding: Platform.isIOS
+              ? const EdgeInsets.only(top: 24, bottom: 80, left: 20, right: 20)
+              : null,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please enter mobile number';
+            }
+            final digits = value.replaceAll(RegExp(r'\D'), '');
+            if (digits.length != 10) {
+              return 'Please enter a valid 10-digit number';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 32),
+        CustomButton(
+          text: 'Sign In',
+          onPressed: _handleLogin,
+        ),
+        if (_canUseBiometric && _mobileController.text.isNotEmpty) ...[
+          const SizedBox(height: 24),
+          Center(
+            child: IconButton(
+              iconSize: 48,
+              icon: const Icon(
+                Icons.fingerprint,
+                color: Color(0xFF1F4ED8),
+              ),
+              onPressed: _attemptBiometric,
+              tooltip: 'Login with Biometrics',
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Center(
+            child: Text(
+              'Tap to use Biometrics',
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF666666),
+              ),
+            ),
+          ),
+        ],
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              "Don't have an account? ",
+              style: TextStyle(
+                fontSize: 16.0,
+                color: Color(0xFF333333),
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                );
+              },
+              child: const Text(
+                'Register',
+                style: TextStyle(
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1F4ED8),
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (Platform.isIOS) const SizedBox(height: 32) else const Spacer(),
+      ],
+    );
+    if (Platform.isIOS) {
+      return SingleChildScrollView(child: column);
+    }
+    return column;
   }
 }
