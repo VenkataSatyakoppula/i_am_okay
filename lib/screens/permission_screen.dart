@@ -35,14 +35,8 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
       if (!mounted) return;
       await _checkPermissions();
       if (!mounted) return;
-      // Automatically request any permissions that are not yet granted
-      if (!_allRequiredPermissionsGranted ||
-          !_locationGranted ||
-          (Platform.isAndroid && !_exactAlarmGranted)) {
-        await Future.delayed(const Duration(milliseconds: 400));
-        if (!mounted) return;
-        await _requestPermissions();
-      }
+      // Do not auto-request on load: let the user see the screen and tap "Grant Permissions".
+      // Auto-requesting on iOS can immediately open Settings, which is disorienting.
     });
   }
 
@@ -60,15 +54,20 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
   }
 
   Future<void> _checkPermissions() async {
-    final notificationStatus = await Permission.notification.status;
     final locationStatus = await Permission.locationWhenInUse.status;
     final exactAlarmStatus = Platform.isAndroid 
         ? await Permission.scheduleExactAlarm.status 
         : PermissionStatus.granted;
 
+    // On iOS, permission_handler often reports notification status incorrectly after
+    // the user grants; use the local notifications plugin so the UI reflects reality.
+    final bool notificationGranted = Platform.isIOS
+        ? await NotificationService().areNotificationsEnabled()
+        : (await Permission.notification.status).isGranted;
+
     if (mounted) {
       setState(() {
-        _notificationGranted = notificationStatus.isGranted;
+        _notificationGranted = notificationGranted;
         _locationGranted = locationStatus.isGranted;
         _exactAlarmGranted = exactAlarmStatus.isGranted;
       });

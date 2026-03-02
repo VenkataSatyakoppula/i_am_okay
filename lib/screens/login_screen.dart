@@ -205,6 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     return Scaffold(
       backgroundColor: const Color(0xFFFFFFFF),
       appBar: AppBar(
@@ -218,14 +219,13 @@ class _LoginScreenState extends State<LoginScreen> {
       resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.only(
-            left: 24.0,
-            right: 24.0,
-            bottom: MediaQuery.viewInsetsOf(context).bottom,
-          ),
-          child: Form(
-            key: _formKey,
-            child: _buildFormContent(),
+          padding: const EdgeInsets.only(left: 24.0, right: 24.0),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(bottom: bottomInset + 24),
+            child: Form(
+              key: _formKey,
+              child: _buildFormContent(),
+            ),
           ),
         ),
       ),
@@ -234,10 +234,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildFormContent() {
     final column = Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (Platform.isIOS) const SizedBox(height: 24) else const Spacer(),
+        if (Platform.isIOS) const SizedBox(height: 24) else const SizedBox(height: 48),
         Center(
           child: SvgPicture.asset(
             'assets/icons/landing_logo.svg',
@@ -280,7 +280,7 @@ class _LoginScreenState extends State<LoginScreen> {
           textInputAction: TextInputAction.done,
           onSubmitted: (_) => _handleLogin(),
           scrollPadding: Platform.isIOS
-              ? const EdgeInsets.only(top: 24, bottom: 80, left: 20, right: 20)
+              ? const EdgeInsets.only(top: 24, bottom: 120, left: 20, right: 20)
               : null,
           validator: (value) {
             if (value == null || value.isEmpty) {
@@ -351,12 +351,9 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ],
         ),
-        if (Platform.isIOS) const SizedBox(height: 32) else const Spacer(),
+        if (Platform.isIOS) const SizedBox(height: 32) else const SizedBox(height: 48),
       ],
     );
-    if (Platform.isIOS) {
-      return SingleChildScrollView(child: column);
-    }
     return column;
   }
 }

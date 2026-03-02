@@ -83,6 +83,20 @@ class NotificationService {
     return granted;
   }
 
+  /// Returns whether notifications are enabled. On iOS uses the local notifications
+  /// plugin so the status matches what we actually requested; permission_handler
+  /// can report the wrong state on iOS after the user grants.
+  Future<bool> areNotificationsEnabled() async {
+    if (Platform.isIOS) {
+      final options = await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin>()
+          ?.checkPermissions();
+      return options?.isEnabled ?? false;
+    }
+    return false;
+  }
+
   Future<void> scheduleDailyNotification(TimeOfDay time) async {
     // Always cancel existing notifications to ensure we don't have duplicates or stale times
     await cancelAllNotifications();

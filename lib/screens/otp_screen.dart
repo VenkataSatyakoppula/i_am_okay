@@ -211,6 +211,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     return Scaffold(
       backgroundColor: const Color(0xFFFFFFFF),
       resizeToAvoidBottomInset: true,
@@ -224,12 +225,11 @@ class _OtpScreenState extends State<OtpScreen> {
       ),
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.only(
-            left: 24.0,
-            right: 24.0,
-            bottom: MediaQuery.viewInsetsOf(context).bottom,
+          padding: const EdgeInsets.only(left: 24.0, right: 24.0),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(bottom: bottomInset + 24),
+            child: _buildOtpContent(),
           ),
-          child: _buildOtpContent(),
         ),
       ),
     );
@@ -237,10 +237,10 @@ class _OtpScreenState extends State<OtpScreen> {
 
   Widget _buildOtpContent() {
     final column = Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (Platform.isIOS) const SizedBox(height: 24) else const Spacer(),
+        if (Platform.isIOS) const SizedBox(height: 24) else const SizedBox(height: 48),
         const Icon(
           Icons.lock_outline,
           size: 80,
@@ -276,7 +276,7 @@ class _OtpScreenState extends State<OtpScreen> {
           keyboardType: TextInputType.number,
           controller: _otpController,
           scrollPadding: Platform.isIOS
-              ? const EdgeInsets.only(top: 24, bottom: 80, left: 20, right: 20)
+              ? const EdgeInsets.only(top: 24, bottom: 120, left: 20, right: 20)
               : null,
         ),
               const SizedBox(height: 32),
@@ -298,12 +298,9 @@ class _OtpScreenState extends State<OtpScreen> {
                   ),
                 ),
               ),
-        if (Platform.isIOS) const SizedBox(height: 32) else const Spacer(),
+        if (Platform.isIOS) const SizedBox(height: 32) else const SizedBox(height: 48),
       ],
     );
-    if (Platform.isIOS) {
-      return SingleChildScrollView(child: column);
-    }
     return column;
   }
 }
