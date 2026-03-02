@@ -10,6 +10,8 @@ import '../gql/mutations/emergency_mutations.dart';
 
 const String emergencySmsTask = "emergencySmsTask";
 
+const String _debugTag = '[EmergencySMS]';
+
 /// On iOS, processing tasks report unique name (e.g. emergency_sms_0); on Android, task name.
 bool _isEmergencySmsTask(String task) =>
     task == emergencySmsTask || task.startsWith('emergency_sms_');
@@ -17,73 +19,77 @@ bool _isEmergencySmsTask(String task) =>
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    if (_isEmergencySmsTask(task)) {
+    debugPrint('$_debugTag callbackDispatcher invoked with task="$task" inputData=$inputData');
+    if (!_isEmergencySmsTask(task)) {
+      debugPrint('$_debugTag task not emergency SMS, skipping. task="$task"');
+      return Future.value(true);
+    }
+    debugPrint('$_debugTag matched emergency SMS task, starting execution');
+    try {
+      debugPrint('$_debugTag Step 1: Getting location...');
+      String locationString = "Unknown";
+      final permission = await Geolocator.checkPermission();
+      debugPrint('$_debugTag Location permission: $permission');
+      if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
         try {
-          debugPrint("Starting emergency SMS task");
-          
-          // 1. Get Location
-          String locationString = "Unknown";
-          final permission = await Geolocator.checkPermission();
-          if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
-            try {
-              final position = await Geolocator.getCurrentPosition(
-                locationSettings: const LocationSettings(
-                  accuracy: LocationAccuracy.high,
-                  timeLimit: Duration(seconds: 10),
-                ),
-              );
-              locationString = "${position.latitude},${position.longitude}";
-            } catch (e) {
-              debugPrint("Error getting location in background: $e");
-              // Fallback or send "Unknown"
-            }
-          } else {
-              debugPrint("Location permission not granted for background task.");
-          }
-
-          // 2. Setup GraphQL Client
-          const storage = FlutterSecureStorage();
-          final token = await storage.read(key: 'auth_token');
-          
-          final HttpLink httpLink = HttpLink(
-            AppConfig.apiUrl,
-          );
-
-          final AuthLink authLink = AuthLink(
-            getToken: () async => token != null ? 'Bearer $token' : null,
-          );
-
-          final Link link = authLink.concat(httpLink);
-          
-          final client = GraphQLClient(
-            link: link,
-            cache: GraphQLCache(),
-          );
-
-          // 3. Execute Mutation
-          final result = await client.mutate(
-            MutationOptions(
-              document: gql(sendEmergencySmsMutation),
-              variables: {
-                'location': locationString,
-              },
+          final position = await Geolocator.getCurrentPosition(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.high,
+              timeLimit: Duration(seconds: 10),
             ),
           );
-
-          if (result.hasException) {
-            debugPrint("Error sending emergency SMS: ${result.exception}");
-            return Future.value(false);
-          }
-
-          debugPrint("Emergency SMS sent successfully: ${result.data}");
-          return Future.value(true);
-
-        } catch (e) {
-          debugPrint("Fatal error in emergency SMS task: $e");
-          return Future.value(false);
+          locationString = "${position.latitude},${position.longitude}";
+          debugPrint('$_debugTag Location obtained: $locationString');
+        } catch (e, st) {
+          debugPrint('$_debugTag Error getting location: $e');
+          debugPrint('$_debugTag $st');
         }
+      } else {
+        debugPrint('$_debugTag Location permission not granted for background task.');
+      }
+
+      debugPrint('$_debugTag Step 2: Setting up GraphQL client...');
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'auth_token');
+      final hasToken = token != null && token.isNotEmpty;
+      debugPrint('$_debugTag Auth token present: $hasToken');
+      if (!hasToken) {
+        debugPrint('$_debugTag Aborting: no auth token (user may be logged out).');
+        return Future.value(false);
+      }
+
+      final HttpLink httpLink = HttpLink(
+        AppConfig.apiUrl,
+      );
+      final AuthLink authLink = AuthLink(
+        getToken: () async => token != null ? 'Bearer $token' : null,
+      );
+      final Link link = authLink.concat(httpLink);
+      final client = GraphQLClient(
+        link: link,
+        cache: GraphQLCache(),
+      );
+      debugPrint('$_debugTag Step 3: Calling sendEmergencySms mutation (location=$locationString)...');
+      final result = await client.mutate(
+        MutationOptions(
+          document: gql(sendEmergencySmsMutation),
+          variables: {
+            'location': locationString,
+          },
+        ),
+      );
+
+      if (result.hasException) {
+        debugPrint('$_debugTag Mutation exception: ${result.exception}');
+        return Future.value(false);
+      }
+      debugPrint('$_debugTag Emergency SMS sent successfully. data=${result.data}');
+      return Future.value(true);
+    } catch (e, st) {
+      debugPrint('$_debugTag Fatal error: $e');
+      debugPrint('$_debugTag StackTrace: $st');
+      return Future.value(false);
     }
-    return Future.value(true);
   });
 }
 
@@ -96,25 +102,29 @@ class BackgroundService {
   BackgroundService._internal();
 
   Future<void> init() async {
+    debugPrint('$_debugTag init() called');
     await Workmanager().initialize(
       callbackDispatcher,
     );
+    debugPrint('$_debugTag Workmanager initialized');
   }
 
   Future<void> scheduleEmergencySmsSequence(DateTime startDate) async {
-    // Cancel any existing tasks
+    debugPrint('$_debugTag scheduleEmergencySmsSequence called startDate=$startDate platform=${Platform.isIOS ? "iOS" : "Android"}');
     await cancelEmergencySms();
-
-    debugPrint("Scheduling emergency SMS sequence for $emergencySmsTaskCount days starting from $startDate");
+    debugPrint('$_debugTag cancelEmergencySms() completed');
 
     for (int i = 0; i < emergencySmsTaskCount; i++) {
       final emergencyTime = startDate.add(Duration(days: i)).add(const Duration(minutes: AppConfig.emergencySmsDelayMinutes));
       final delay = emergencyTime.difference(DateTime.now());
 
-      if (!delay.isNegative) {
+      if (delay.isNegative) {
+        debugPrint('$_debugTag day $i skipped (delay negative: ${delay.inMinutes} min)');
+        continue;
+      }
+      try {
         if (Platform.isIOS) {
-          // iOS: use BGProcessingTask so the task can be scheduled for a future time.
-          // registerOneOffTask on iOS runs immediately and does not honor initialDelay.
+          debugPrint('$_debugTag Registering iOS processing task emergency_sms_$i delay=${delay.inMinutes} min (${delay.inSeconds} sec)');
           await Workmanager().registerProcessingTask(
             "emergency_sms_$i",
             emergencySmsTask,
@@ -124,6 +134,7 @@ class BackgroundService {
             ),
             inputData: {},
           );
+          debugPrint('$_debugTag iOS registerProcessingTask("emergency_sms_$i") returned OK');
         } else {
           await Workmanager().registerOneOffTask(
             "emergency_sms_$i",
@@ -135,18 +146,19 @@ class BackgroundService {
             inputData: {},
             existingWorkPolicy: ExistingWorkPolicy.replace,
           );
+          debugPrint('$_debugTag Android registerOneOffTask day $i OK');
         }
-        debugPrint("Scheduled emergency SMS task for day $i with delay: ${delay.inMinutes} minutes");
+      } catch (e, st) {
+        debugPrint('$_debugTag FAILED to schedule day $i: $e');
+        debugPrint('$_debugTag $st');
       }
     }
+    debugPrint('$_debugTag scheduleEmergencySmsSequence finished. To inspect pending tasks on iOS: Workmanager().printScheduledTasks()');
   }
 
   Future<void> cancelEmergencySms() async {
-    await Workmanager().cancelAll(); 
-    // Note: cancelAll cancels everything. If we have other tasks, we should use cancelByTag (if supported) or unique names.
-    // For now, assuming this is the only background task. 
-    // If we want to be more specific, we'd need to track the ID.
-    // However, workmanager cancellation by tag/ID is sometimes tricky. 
-    // cancelAll() is safest if this is the only background job.
+    debugPrint('$_debugTag cancelEmergencySms() called');
+    await Workmanager().cancelAll();
+    debugPrint('$_debugTag cancelAll() completed');
   }
 }

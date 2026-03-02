@@ -20,9 +20,10 @@ class CustomBottomNavbar extends StatelessWidget {
     final itemWidth = screenWidth / itemCount;
     final indicatorWidth = itemWidth * 0.6;
     final horizontalPadding = (itemWidth - indicatorWidth) / 2;
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
 
     return Container(
-      height: 80,
+      padding: EdgeInsets.only(bottom: bottomPadding),
       decoration: const BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -33,8 +34,10 @@ class CustomBottomNavbar extends StatelessWidget {
           ),
         ],
       ),
-      child: Stack(
-        children: [
+      child: SizedBox(
+        height: 80,
+        child: Stack(
+          children: [
           // Animated Indicator
           AnimatedPositioned(
             duration: const Duration(milliseconds: 250),
@@ -59,6 +62,7 @@ class CustomBottomNavbar extends StatelessWidget {
             }),
           ),
         ],
+        ),
       ),
     );
   }

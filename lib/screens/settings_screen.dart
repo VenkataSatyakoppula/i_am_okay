@@ -10,6 +10,7 @@ import 'daily_reminder_screen.dart';
 import 'edit_profile_screen.dart';
 import 'support_screen.dart';
 import 'privacy_policy_screen.dart';
+import 'permission_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -287,6 +288,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 MaterialPageRoute(
                     builder: (_) =>
                         const DailyReminderScreen(isOnboarding: false))),
+          ),
+          _buildProfileOption(
+            icon: Icons.notifications_active_outlined,
+            title: "Permissions",
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const PermissionScreen(fromSettings: true),
+              ),
+            ),
           ),
         ],
       ),

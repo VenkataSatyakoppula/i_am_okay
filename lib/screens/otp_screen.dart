@@ -228,13 +228,12 @@ class _OtpScreenState extends State<OtpScreen> {
             right: 24.0,
             bottom: MediaQuery.viewInsetsOf(context).bottom,
           ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 24),
-                const Icon(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Spacer(),
+              const Icon(
                 Icons.lock_outline,
                 size: 80,
                 color: Color(0xFF1F4ED8),
@@ -244,7 +243,7 @@ class _OtpScreenState extends State<OtpScreen> {
                 child: Text(
                   'Verification',
                   style: TextStyle(
-                    fontSize: 28.0, // Main heading
+                    fontSize: 28.0,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF000000),
                   ),
@@ -268,6 +267,7 @@ class _OtpScreenState extends State<OtpScreen> {
                 hint: 'Enter the 6-digit code',
                 keyboardType: TextInputType.number,
                 controller: _otpController,
+                scrollPadding: EdgeInsets.zero,
               ),
               const SizedBox(height: 32),
               CustomButton(
@@ -288,9 +288,8 @@ class _OtpScreenState extends State<OtpScreen> {
                   ),
                 ),
               ),
-                const SizedBox(height: 32),
-              ],
-            ),
+              const Spacer(),
+            ],
           ),
         ),
       ),

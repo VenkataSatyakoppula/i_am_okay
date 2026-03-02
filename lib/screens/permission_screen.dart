@@ -9,7 +9,10 @@ import 'biometric_setup_screen.dart';
 import 'home_screen.dart';
 
 class PermissionScreen extends StatefulWidget {
-  const PermissionScreen({super.key});
+  /// When true, screen is opened from Settings: show back button and pop on Continue.
+  final bool fromSettings;
+
+  const PermissionScreen({super.key, this.fromSettings = false});
 
   @override
   State<PermissionScreen> createState() => _PermissionScreenState();
@@ -28,9 +31,17 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _checkPermissions();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await _checkPermissions();
+      if (!mounted) return;
+      // Automatically request any permissions that are not yet granted
+      if (!_allRequiredPermissionsGranted ||
+          !_locationGranted ||
+          (Platform.isAndroid && !_exactAlarmGranted)) {
+        await Future.delayed(const Duration(milliseconds: 400));
+        if (!mounted) return;
+        await _requestPermissions();
       }
     });
   }
@@ -62,7 +73,7 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
         _exactAlarmGranted = exactAlarmStatus.isGranted;
       });
 
-      if (_allRequiredPermissionsGranted) {
+      if (_allRequiredPermissionsGranted && !widget.fromSettings) {
         _navigateToNext();
       }
     }
@@ -119,10 +130,28 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
     }
   }
 
+  void _onContinueOrBack() {
+    if (widget.fromSettings) {
+      Navigator.of(context).pop();
+    } else {
+      _navigateToNext();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFFFFF),
+      appBar: widget.fromSettings
+          ? AppBar(
+              backgroundColor: const Color(0xFFFFFFFF),
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Color(0xFF000000)),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            )
+          : null,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
@@ -214,7 +243,7 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
                       ),
                     );
                   }
-                  _navigateToNext();
+                  _onContinueOrBack();
                 },
               ),
             ],

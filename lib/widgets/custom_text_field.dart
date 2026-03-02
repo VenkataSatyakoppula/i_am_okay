@@ -16,6 +16,9 @@ class CustomTextField extends StatelessWidget {
   final String? Function(String?)? validator;
   final AutovalidateMode autovalidateMode;
   final bool readOnly;
+  /// When the field is focused and the scroll view scrolls to show it, this padding
+  /// is used so the field is not pushed to the very top (keeps it visible above keyboard).
+  final EdgeInsets? scrollPadding;
 
   const CustomTextField({
     super.key,
@@ -32,6 +35,7 @@ class CustomTextField extends StatelessWidget {
     this.validator,
     this.autovalidateMode = AutovalidateMode.onUserInteraction,
     this.readOnly = false,
+    this.scrollPadding,
   });
 
   @override
@@ -86,6 +90,7 @@ class CustomTextField extends StatelessWidget {
             fontWeight: FontWeight.w400, // Regular (400)
             color: Color(0xFF000000), // Primary Text
           ),
+          scrollPadding: scrollPadding ?? const EdgeInsets.all(20.0),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: const TextStyle(

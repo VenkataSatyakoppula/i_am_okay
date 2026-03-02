@@ -224,125 +224,124 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           child: Form(
             key: _formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 24),
-                  Center(
-                    child: SvgPicture.asset(
-                  'assets/icons/landing_logo.svg',
-                  height: 100,
-                  colorFilter: const ColorFilter.mode(
-                    Color(0xFF1F4ED8),
-                    BlendMode.srcIn,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Center(
-                child: Text(
-                  widget.fromRegistration ? 'Welcome' : 'Welcome Back',
-                  style: const TextStyle(
-                    fontSize: 28.0, // Main heading
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF000000),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Center(
-                child: Text(
-                  'Sign in to continue to your account',
-                  style: TextStyle(
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF333333),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 48),
-              CustomTextField(
-                label: 'Mobile Number',
-                hint: 'Enter your mobile number',
-                keyboardType: TextInputType.phone,
-                controller: _mobileController,
-                inputFormatters: [PhoneInputFormatter()],
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _handleLogin(),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter mobile number';
-                  }
-                  final digits = value.replaceAll(RegExp(r'\D'), '');
-                  if (digits.length != 10) {
-                    return 'Please enter a valid 10-digit number';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 32),
-              CustomButton(
-                text: 'Sign In',
-                onPressed: _handleLogin,
-              ),
-              if (_canUseBiometric && _mobileController.text.isNotEmpty) ...[
-                const SizedBox(height: 24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Spacer(),
                 Center(
-                  child: IconButton(
-                    iconSize: 48,
-                    icon: const Icon(
-                      Icons.fingerprint,
-                      color: Color(0xFF1F4ED8),
+                  child: SvgPicture.asset(
+                    'assets/icons/landing_logo.svg',
+                    height: 100,
+                    colorFilter: const ColorFilter.mode(
+                      Color(0xFF1F4ED8),
+                      BlendMode.srcIn,
                     ),
-                    onPressed: _attemptBiometric,
-                    tooltip: 'Login with Biometrics',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Center(
+                  child: Text(
+                    widget.fromRegistration ? 'Welcome' : 'Welcome Back',
+                    style: const TextStyle(
+                      fontSize: 28.0,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF000000),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
                 const Center(
                   child: Text(
-                    'Tap to use Biometrics',
+                    'Sign in to continue to your account',
                     style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF666666),
-                    ),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    "Don't have an account? ",
-                    style: TextStyle(
-                      fontSize: 16.0,
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.w400,
                       color: Color(0xFF333333),
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const RegisterScreen()),
-                      );
-                    },
-                    child: const Text(
-                      'Register',
-                      style: TextStyle(
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.w600,
+                ),
+                const SizedBox(height: 48),
+                CustomTextField(
+                  label: 'Mobile Number',
+                  hint: 'Enter your mobile number',
+                  keyboardType: TextInputType.phone,
+                  controller: _mobileController,
+                  inputFormatters: [PhoneInputFormatter()],
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _handleLogin(),
+                  scrollPadding: EdgeInsets.zero,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter mobile number';
+                    }
+                    final digits = value.replaceAll(RegExp(r'\D'), '');
+                    if (digits.length != 10) {
+                      return 'Please enter a valid 10-digit number';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 32),
+                CustomButton(
+                  text: 'Sign In',
+                  onPressed: _handleLogin,
+                ),
+                if (_canUseBiometric && _mobileController.text.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  Center(
+                    child: IconButton(
+                      iconSize: 48,
+                      icon: const Icon(
+                        Icons.fingerprint,
                         color: Color(0xFF1F4ED8),
+                      ),
+                      onPressed: _attemptBiometric,
+                      tooltip: 'Login with Biometrics',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Center(
+                    child: Text(
+                      'Tap to use Biometrics',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF666666),
                       ),
                     ),
                   ),
                 ],
-              ),
-                  const SizedBox(height: 32),
-                ],
-              ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "Don't have an account? ",
+                      style: TextStyle(
+                        fontSize: 16.0,
+                        color: Color(0xFF333333),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                        );
+                      },
+                      child: const Text(
+                        'Register',
+                        style: TextStyle(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1F4ED8),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+              ],
             ),
           ),
         ),
