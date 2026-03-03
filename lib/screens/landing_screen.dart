@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../widgets/custom_button.dart';
 import 'register_screen.dart';
 import 'login_screen.dart';
+import 'home_screen.dart';
 
 class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
@@ -50,22 +51,33 @@ class _LandingScreenState extends State<LandingScreen>
   Future<void> _checkAutoLogin() async {
     const storage = FlutterSecureStorage();
     final token = await storage.read(key: 'auth_token');
+    final biometricEnabled = await storage.read(key: 'biometric_enabled');
     final mobile = await storage.read(key: 'mobile_number');
-    
-    if (token != null && mobile != null && mounted) {
-      // Small delay to let the UI render and animation start
-      await Future.delayed(const Duration(milliseconds: 500));
 
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => LoginScreen(
-              initialMobileNumber: mobile,
-              autoBiometric: true,
-            ),
+    if (token == null || token.isEmpty || !mounted) return;
+
+    // Small delay to let the UI render and animation start
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+
+    // Valid token present and biometric not enabled → go to Home
+    if (biometricEnabled != 'true') {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+      return;
+    }
+
+    // Biometric enabled → go to LoginScreen to trigger biometric auth
+    if (mobile != null) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => LoginScreen(
+            initialMobileNumber: mobile,
+            autoBiometric: true,
           ),
-        );
-      }
+        ),
+      );
     }
   }
 

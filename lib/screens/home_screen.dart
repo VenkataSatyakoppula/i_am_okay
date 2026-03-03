@@ -208,7 +208,23 @@ class _HomeContentState extends State<HomeContent>
             final pausedUntil = user.reminderSettings!.pausedUntil;
 
             if (isPaused && (pausedUntil == null || !DateTime.now().isAfter(pausedUntil))) {
-              await NotificationService().cancelAllNotifications();
+              // Still within pause period: ensure notifications are scheduled from pausedUntil (covers first-time load or no schedule yet).
+              if (pausedUntil != null && _checkInTimeOfDay != null) {
+                final localPausedUntil = pausedUntil.toLocal();
+                var scheduledDate = tz.TZDateTime(
+                  tz.local,
+                  localPausedUntil.year,
+                  localPausedUntil.month,
+                  localPausedUntil.day,
+                  time.hour,
+                  time.minute,
+                );
+                if (localPausedUntil.hour > time.hour ||
+                    (localPausedUntil.hour == time.hour && localPausedUntil.minute > time.minute)) {
+                  scheduledDate = scheduledDate.add(const Duration(days: 1));
+                }
+                await NotificationService().scheduleDailyNotificationFromDate(scheduledDate);
+              }
             } else {
               final storedTime = await _storage.read(key: 'last_scheduled_reminder_time');
               final currentTimeStr = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';

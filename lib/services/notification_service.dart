@@ -7,7 +7,7 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:flutter/material.dart';
 import '../config.dart';
-import 'background_service.dart';
+import 'graphql_service.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -134,13 +134,24 @@ class NotificationService {
     final reminderDate = startDate.add(const Duration(minutes: AppConfig.followUpReminderDelayMinutes));
     await _scheduleNotifications(reminderDate, 100, 'checkin_reminder', 'Check-in Reminder', 'You haven\'t checked in yet. Is everything okay?');
 
-    // Schedule Emergency SMS Task Sequence (starting from the first scheduled date)
-    // The background service will handle the 15-day loop logic.
-    await BackgroundService().scheduleEmergencySmsSequence(startDate);
+    // Schedule emergency SMS tasks on the backend from startDate (e.g. when user sets/changes daily reminder time).
+    try {
+      final timeZoneInfo = await FlutterTimezone.getLocalTimezone();
+      final startDateIso = '${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}T00:00:00Z';
+      await GraphQLService.scheduleEmergencySmsTasks(
+        days: 7,
+        timeZone: timeZoneInfo?.identifier ?? 'UTC',
+        checkInOffset: AppConfig.emergencySmsDelayMinutes,
+        startDate: startDateIso,
+      );
+      debugPrint('Scheduled emergency SMS tasks on backend from $startDateIso');
+    } catch (e) {
+      debugPrint('Failed to schedule emergency SMS tasks: $e');
+    }
   }
 
-  /// Number of days to schedule ahead on iOS (one-off notifications; matchDateTimeComponents is unreliable on iOS).
-  static const int _iosScheduleDays = 15;
+  /// Number of days to schedule ahead (one-off per day on both Android and iOS).
+  static const int _scheduleDaysAhead = 15;
 
   Future<void> _scheduleNotifications(tz.TZDateTime startDate, int startId, String type, String title, String body) async {
     try {
@@ -159,64 +170,39 @@ class NotificationService {
         ),
       );
 
-      if (Platform.isIOS) {
-        // iOS: schedule multiple one-off notifications (matchDateTimeComponents can be unreliable on iOS).
-        for (int i = 0; i < _iosScheduleDays; i++) {
-          final tz.TZDateTime notificationDate = startDate.add(Duration(days: i));
-          final payload = jsonEncode({
-            'type': type,
-            'scheduledDate': notificationDate.toIso8601String(),
-          });
-          try {
-            await flutterLocalNotificationsPlugin.zonedSchedule(
-              id: startId + i,
-              title: title,
-              body: body,
-              scheduledDate: notificationDate,
-              notificationDetails: notificationDetails,
-              androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-              payload: payload,
-            );
-          } catch (e) {
-            debugPrint('iOS schedule notification $type day $i: $e');
-          }
-        }
-        debugPrint('Scheduled $_iosScheduleDays days of $type notifications on iOS');
-      } else {
-        // Android: one recurring daily notification.
+      for (int i = 0; i < _scheduleDaysAhead; i++) {
+        final tz.TZDateTime notificationDate = startDate.add(Duration(days: i));
         final payload = jsonEncode({
           'type': type,
-          'scheduledDate': startDate.toIso8601String(),
+          'scheduledDate': notificationDate.toIso8601String(),
         });
-        await flutterLocalNotificationsPlugin.zonedSchedule(
-          id: startId,
-          title: title,
-          body: body,
-          scheduledDate: startDate,
-          notificationDetails: notificationDetails,
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          matchDateTimeComponents: DateTimeComponents.time,
-          payload: payload,
-        );
+        try {
+          await flutterLocalNotificationsPlugin.zonedSchedule(
+            id: startId + i,
+            title: title,
+            body: body,
+            scheduledDate: notificationDate,
+            notificationDetails: notificationDetails,
+            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+            payload: payload,
+          );
+        } catch (e) {
+          debugPrint('Schedule notification $type day $i: $e');
+        }
       }
+      debugPrint('Scheduled $_scheduleDaysAhead days of $type notifications');
     } catch (e) {
       debugPrint('ERROR scheduling notification ($type): $e');
     }
   }
 
   Future<void> completeDailyCheckIn(TimeOfDay checkInTime) async {
-    // 1. Cancel follow-up reminders (id 100 on Android; 100..129 on iOS).
-    for (int i = 0; i < _iosScheduleDays; i++) {
-      await flutterLocalNotificationsPlugin.cancel(id: 100 + i);
-    }
-    // Cancel any pending emergency SMS task since user checked in
-    await BackgroundService().cancelEmergencySms();
-    
-    debugPrint('Cancelled check-in reminders and emergency task');
-
-    // 2. Reschedule reminders starting from TOMORROW
-    final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-    final tz.TZDateTime todayCheckIn = tz.TZDateTime(
+    // Time windows (e.g. checkIn 11:00, reminder 11:05, emergencySms 11:10):
+    // - Before checkInTime: do not clear anything.
+    // - Between checkInTime and reminder (11:00–11:05): clear checkin_reminder + emergencySMS, schedule from tomorrow.
+    // - Between reminder and emergencySms (11:05–11:10) or after: clear only emergencySMS, schedule from tomorrow.
+    final now = tz.TZDateTime.now(tz.local);
+    final todayCheckInTime = tz.TZDateTime(
       tz.local,
       now.year,
       now.month,
@@ -224,21 +210,56 @@ class NotificationService {
       checkInTime.hour,
       checkInTime.minute,
     );
-    
-    // Start from tomorrow
-    final tz.TZDateTime tomorrowCheckIn = todayCheckIn.add(const Duration(days: 1));
-    final reminderDate = tomorrowCheckIn.add(const Duration(minutes: AppConfig.followUpReminderDelayMinutes));
-    
-    await _scheduleNotifications(reminderDate, 100, 'checkin_reminder', 'Check-in Reminder', 'You haven\'t checked in yet. Is everything okay?');
+    if (now.isBefore(todayCheckInTime)) {
+      debugPrint('Checked in before checkInTime - not clearing notifications or emergency SMS');
+      return;
+    }
 
-    // Schedule Emergency SMS Sequence for tomorrow
-    // We start the sequence from tomorrow's check-in time.
-    await BackgroundService().scheduleEmergencySmsSequence(tomorrowCheckIn);
+    final reminderTime = todayCheckInTime.add(const Duration(minutes: AppConfig.followUpReminderDelayMinutes));
+
+    // Tomorrow's date in ISO 8601 format for backend startDate (e.g. 2025-03-01T00:00:00Z).
+    final tomorrowCheckIn = todayCheckInTime.add(const Duration(days: 1));
+    final startDateIso = '${tomorrowCheckIn.year}-${tomorrowCheckIn.month.toString().padLeft(2, '0')}-${tomorrowCheckIn.day.toString().padLeft(2, '0')}T00:00:00Z';
+
+    final bool inPreReminderWindow = now.isBefore(reminderTime);
+
+    if (inPreReminderWindow) {
+      // 11:00–11:05: cancel local notifications FIRST so the pending follow-up reminder is removed immediately (before it can fire).
+      await flutterLocalNotificationsPlugin.cancelAll();
+      debugPrint('Cleared daily_checkin and checkin_reminder (pre-reminder window)');
+    }
+
+    try {
+      await GraphQLService.clearEmergencySmsTasks();
+      final timeZoneInfo = await FlutterTimezone.getLocalTimezone();
+      await GraphQLService.scheduleEmergencySmsTasks(
+        days: 7,
+        timeZone: timeZoneInfo?.identifier ?? 'UTC',
+        checkInOffset: AppConfig.emergencySmsDelayMinutes,
+        startDate: startDateIso,
+      );
+      debugPrint('Cleared and rescheduled emergency SMS tasks on backend from $startDateIso');
+    } catch (e) {
+      debugPrint('Failed to update emergency SMS tasks: $e');
+    }
+
+    if (inPreReminderWindow) {
+      // Reschedule daily_checkin and checkin_reminder from tomorrow.
+      final reminderDate = tomorrowCheckIn.add(const Duration(minutes: AppConfig.followUpReminderDelayMinutes));
+      await _scheduleNotifications(tomorrowCheckIn, 0, 'daily_checkin', 'Daily Check-in', 'Time to check in! Are you okay?');
+      await _scheduleNotifications(reminderDate, 100, 'checkin_reminder', 'Check-in Reminder', 'You haven\'t checked in yet. Is everything okay?');
+      debugPrint('Rescheduled daily_checkin and checkin_reminder from tomorrow');
+    }
+    // 11:05–11:10 or after: only emergencySMS was cleared/rescheduled above; do not touch local notifications.
   }
-
 
   Future<void> cancelAllNotifications() async {
     await flutterLocalNotificationsPlugin.cancelAll();
-    await BackgroundService().cancelEmergencySms();
+    try {
+      await GraphQLService.clearEmergencySmsTasks();
+      debugPrint('Cleared emergency SMS tasks on backend');
+    } catch (e) {
+      debugPrint('Failed to clear emergency SMS tasks (may be logged out): $e');
+    }
   }
 }

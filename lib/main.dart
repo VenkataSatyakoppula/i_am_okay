@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'screens/landing_screen.dart';
 import 'services/notification_service.dart';
-import 'services/background_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await NotificationService().init();
-  await BackgroundService().init();
   
   // Set preferred orientations
   SystemChrome.setPreferredOrientations([

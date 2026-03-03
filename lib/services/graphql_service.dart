@@ -9,6 +9,7 @@ import '../gql/queries/user_queries.dart';
 import '../gql/queries/checkin_queries.dart';
 import '../gql/mutations/user_mutations.dart';
 import '../gql/mutations/checkin_mutations.dart';
+import '../gql/mutations/emergency_mutations.dart';
 
 import '../models/user_model.dart';
 import '../models/checkin_model.dart';
@@ -333,5 +334,42 @@ class GraphQLService {
     }
 
     return result.data?['deleteCheckIn'] as bool;
+  }
+
+  /// Schedule emergency SMS tasks on the backend. Uses user's CheckInTime from profile.
+  /// [startDate] optional ISO date (YYYY-MM-DD) to start schedule from; when null, backend starts from today.
+  static Future<bool> scheduleEmergencySmsTasks({
+    int days = 7,
+    String? timeZone,
+    int checkInOffset = 15,
+    String? startDate,
+  }) async {
+    final client = await getClient();
+    final variables = <String, dynamic>{
+      'days': days,
+      'timeZone': timeZone ?? 'UTC',
+      'checkInOffset': checkInOffset,
+    };
+    if (startDate != null) variables['startDate'] = startDate;
+    final result = await client.mutate(
+      MutationOptions(
+        document: gql(scheduleEmergencySmsTasksMutation),
+        variables: variables,
+      ),
+    );
+    if (result.hasException) throw result.exception!;
+    return result.data?['scheduleEmergencySmsTasks'] as bool? ?? false;
+  }
+
+  /// Clear scheduled emergency SMS tasks. Call on logout or when pausing reminders.
+  static Future<bool> clearEmergencySmsTasks() async {
+    final client = await getClient();
+    final result = await client.mutate(
+      MutationOptions(
+        document: gql(clearEmergencySmsTasksMutation),
+      ),
+    );
+    if (result.hasException) throw result.exception!;
+    return result.data?['clearEmergencySmsTasks'] as bool? ?? false;
   }
 }
