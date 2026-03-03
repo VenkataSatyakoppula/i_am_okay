@@ -237,7 +237,7 @@ class _HomeContentState extends State<HomeContent>
         }
       }
     } catch (e) {
-      debugPrint('Error fetching user data: $e');
+      // Error fetching user data
     }
   }
 
@@ -326,7 +326,6 @@ class _HomeContentState extends State<HomeContent>
           }
         }
       } catch (e) {
-        debugPrint('Location error: $e');
         // Continue without location
       }
 
@@ -362,7 +361,7 @@ class _HomeContentState extends State<HomeContent>
             await NotificationService().completeDailyCheckIn(time);
           }
         } catch (e) {
-          debugPrint('Error parsing time from string: $e');
+          // Error parsing time
         }
       }
 
@@ -377,7 +376,6 @@ class _HomeContentState extends State<HomeContent>
       }
     } catch (e) {
       if (mounted) {
-        debugPrint(e.toString());
         LoadingOverlay.hide(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

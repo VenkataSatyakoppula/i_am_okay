@@ -71,7 +71,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         });
       }
     } catch (e) {
-      debugPrint("Failed to fetch full profile: $e");
+      // Failed to fetch full profile
     }
   }
 

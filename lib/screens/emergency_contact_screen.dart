@@ -99,7 +99,7 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
         });
       }
     } catch (e) {
-      debugPrint('Error fetching contacts: $e');
+      // Error fetching contacts
     } finally {
       if (mounted) {
         setState(() {
@@ -159,8 +159,6 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
         }
       }
     } catch (e, stackTrace) {
-      debugPrint('Emergency contacts sync error: $e');
-      debugPrint('$stackTrace');
       if (mounted) {
         final scaffoldContext = _scaffoldKey.currentContext;
         if (scaffoldContext != null) {

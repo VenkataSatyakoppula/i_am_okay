@@ -327,7 +327,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     }
                   }
                 } catch (e) {
-                  debugPrint('Error launching map: $e');
+                  // Failed to launch map
                 }
               },
               icon: const Icon(Icons.map, size: 18),

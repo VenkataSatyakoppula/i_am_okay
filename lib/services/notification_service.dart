@@ -22,9 +22,8 @@ class NotificationService {
       tz.initializeTimeZones();
       final String timeZoneName = await FlutterTimezone.getLocalTimezone().then((tz) => tz.identifier);
       tz.setLocalLocation(tz.getLocation(timeZoneName));
-      debugPrint('Local timezone successfully set to: $timeZoneName');
     } catch (e) {
-      debugPrint('Error setting local timezone: $e');
+      // Timezone init failed
     }
 
     const AndroidInitializationSettings initializationSettingsAndroid =
@@ -48,8 +47,6 @@ class NotificationService {
       settings: initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) {
         // Handle notification tap
-        debugPrint('Notification tapped: ${notificationResponse.payload}');
-        
       },
     );
   }
@@ -71,15 +68,12 @@ class NotificationService {
     bool? androidGranted = await androidImplementation?.requestNotificationsPermission();
     if (androidImplementation != null) {
         final canSchedule = await androidImplementation.canScheduleExactNotifications();
-      debugPrint('Can schedule exact alarms: $canSchedule');
-      
       if (canSchedule == false) {
         await androidImplementation.requestExactAlarmsPermission();
       }
     }
     
     final granted = (iosGranted ?? false) || (androidGranted ?? false);
-    debugPrint('Permissions granted: $granted (iOS: $iosGranted, Android: $androidGranted)');
     return granted;
   }
 
@@ -144,9 +138,8 @@ class NotificationService {
         checkInOffset: AppConfig.emergencySmsDelayMinutes,
         startDate: startDateIso,
       );
-      debugPrint('Scheduled emergency SMS tasks on backend from $startDateIso');
     } catch (e) {
-      debugPrint('Failed to schedule emergency SMS tasks: $e');
+      // Failed to schedule emergency SMS tasks
     }
   }
 
@@ -187,12 +180,11 @@ class NotificationService {
             payload: payload,
           );
         } catch (e) {
-          debugPrint('Schedule notification $type day $i: $e');
+          // Schedule failed for day $i
         }
       }
-      debugPrint('Scheduled $_scheduleDaysAhead days of $type notifications');
     } catch (e) {
-      debugPrint('ERROR scheduling notification ($type): $e');
+      // Error scheduling notification
     }
   }
 
@@ -211,7 +203,6 @@ class NotificationService {
       checkInTime.minute,
     );
     if (now.isBefore(todayCheckInTime)) {
-      debugPrint('Checked in before checkInTime - not clearing notifications or emergency SMS');
       return;
     }
 
@@ -226,7 +217,6 @@ class NotificationService {
     if (inPreReminderWindow) {
       // 11:00–11:05: cancel local notifications FIRST so the pending follow-up reminder is removed immediately (before it can fire).
       await flutterLocalNotificationsPlugin.cancelAll();
-      debugPrint('Cleared daily_checkin and checkin_reminder (pre-reminder window)');
     }
 
     try {
@@ -238,9 +228,8 @@ class NotificationService {
         checkInOffset: AppConfig.emergencySmsDelayMinutes,
         startDate: startDateIso,
       );
-      debugPrint('Cleared and rescheduled emergency SMS tasks on backend from $startDateIso');
     } catch (e) {
-      debugPrint('Failed to update emergency SMS tasks: $e');
+      // Failed to update emergency SMS tasks
     }
 
     if (inPreReminderWindow) {
@@ -248,7 +237,6 @@ class NotificationService {
       final reminderDate = tomorrowCheckIn.add(const Duration(minutes: AppConfig.followUpReminderDelayMinutes));
       await _scheduleNotifications(tomorrowCheckIn, 0, 'daily_checkin', 'Daily Check-in', 'Time to check in! Are you okay?');
       await _scheduleNotifications(reminderDate, 100, 'checkin_reminder', 'Check-in Reminder', 'You haven\'t checked in yet. Is everything okay?');
-      debugPrint('Rescheduled daily_checkin and checkin_reminder from tomorrow');
     }
     // 11:05–11:10 or after: only emergencySMS was cleared/rescheduled above; do not touch local notifications.
   }
@@ -257,9 +245,8 @@ class NotificationService {
     await flutterLocalNotificationsPlugin.cancelAll();
     try {
       await GraphQLService.clearEmergencySmsTasks();
-      debugPrint('Cleared emergency SMS tasks on backend');
     } catch (e) {
-      debugPrint('Failed to clear emergency SMS tasks (may be logged out): $e');
+      // Failed to clear (e.g. logged out)
     }
   }
 }

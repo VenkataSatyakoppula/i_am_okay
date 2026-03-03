@@ -1,6 +1,5 @@
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/material.dart';
 
 class BiometricService {
   static final LocalAuthentication _auth = LocalAuthentication();
@@ -9,13 +8,10 @@ class BiometricService {
     try {
       final bool canAuthenticateWithBiometrics = await _auth.canCheckBiometrics;
       final bool isDeviceSupported = await _auth.isDeviceSupported();
-      debugPrint('Biometrics: canCheck=$canAuthenticateWithBiometrics, deviceSupported=$isDeviceSupported');
-      
       final bool canAuthenticate =
           canAuthenticateWithBiometrics || isDeviceSupported;
       return canAuthenticate;
     } on PlatformException catch (e) {
-      debugPrint('Error checking biometrics: $e');
       return false;
     }
   }
@@ -28,7 +24,6 @@ class BiometricService {
         biometricOnly: false,
       );
     } on PlatformException catch (e) {
-      debugPrint('Error authenticating: $e');
       return false;
     }
   }

@@ -65,7 +65,7 @@ class _DailyReminderScreenState extends State<DailyReminderScreen> {
         }
       }
     } catch (e) {
-      debugPrint('Error fetching reminder settings: $e');
+      // Error fetching reminder settings
     } finally {
       if (mounted) {
         setState(() {
@@ -132,7 +132,6 @@ class _DailyReminderScreenState extends State<DailyReminderScreen> {
         }
       }
     } catch (e) {
-      debugPrint("hello error$e");
       if (mounted) {
         LoadingOverlay.hide(context);
         ScaffoldMessenger.of(context).showSnackBar(

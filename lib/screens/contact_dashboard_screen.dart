@@ -51,7 +51,6 @@ class _ContactDashboardScreenState extends State<ContactDashboardScreen> {
         });
       }
     } catch (e) {
-      debugPrint('Error loading dashboard data: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
