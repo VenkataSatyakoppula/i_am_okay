@@ -6,7 +6,10 @@ import 'package:IamOkay/widgets/custom_button.dart';
 import 'package:local_auth/local_auth.dart';
 
 class BiometricSetupScreen extends StatefulWidget {
-  const BiometricSetupScreen({super.key});
+  /// When true, screen is opened from Settings: show app bar and pop on done.
+  final bool fromSettings;
+
+  const BiometricSetupScreen({super.key, this.fromSettings = false});
 
   @override
   State<BiometricSetupScreen> createState() => _BiometricSetupScreenState();
@@ -54,7 +57,11 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
 
     if (authenticated) {
       await _storage.write(key: 'biometric_enabled', value: 'true');
-      _navigateToDashboard();
+      if (widget.fromSettings && mounted) {
+        Navigator.pop(context);
+      } else {
+        _navigateToDashboard();
+      }
     } else {
       // Optionally, show a message that authentication failed
       if (mounted) {
@@ -70,7 +77,11 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
 
   Future<void> _skipBiometric() async {
     await _storage.write(key: 'biometric_enabled', value: 'false');
-    _navigateToDashboard();
+    if (widget.fromSettings && mounted) {
+      Navigator.pop(context);
+    } else {
+      _navigateToDashboard();
+    }
   }
 
   void _navigateToDashboard() async {
@@ -98,6 +109,23 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFFFFF),
+      appBar: widget.fromSettings
+          ? AppBar(
+              backgroundColor: const Color(0xFFFFFFFF),
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Color(0xFF333333)),
+                onPressed: () => Navigator.pop(context),
+              ),
+              title: const Text(
+                'Biometric',
+                style: TextStyle(
+                  color: Color(0xFF333333),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            )
+          : null,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),

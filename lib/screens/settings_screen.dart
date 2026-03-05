@@ -11,6 +11,7 @@ import 'edit_profile_screen.dart';
 import 'support_screen.dart';
 import 'privacy_policy_screen.dart';
 import 'permission_screen.dart';
+import 'biometric_setup_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -296,6 +297,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               context,
               MaterialPageRoute(
                 builder: (_) => const PermissionScreen(fromSettings: true),
+              ),
+            ),
+          ),
+          _buildProfileOption(
+            icon: Icons.fingerprint,
+            title: "Biometric",
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const BiometricSetupScreen(fromSettings: true),
               ),
             ),
           ),
