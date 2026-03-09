@@ -1,8 +1,10 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../widgets/custom_button.dart';
 import '../services/notification_service.dart';
 import 'biometric_setup_screen.dart';
@@ -19,9 +21,13 @@ class PermissionScreen extends StatefulWidget {
 }
 
 class _PermissionScreenState extends State<PermissionScreen> with WidgetsBindingObserver {
+  static const _fullScreenIntentChannel =
+      MethodChannel('com.infodat.iamokay/full_screen_intent');
+
   bool _notificationGranted = false;
   bool _locationGranted = false;
   bool _exactAlarmGranted = false;
+  bool _fullScreenIntentRequested = false;
 
   bool get _allRequiredPermissionsGranted {
     return _notificationGranted && (!Platform.isAndroid || _exactAlarmGranted);
@@ -105,6 +111,14 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
       if (status.isPermanentlyDenied) {
         openAppSettings();
       }
+    }
+
+    // Open Full-screen intent settings (Android 12+)
+    if (Platform.isAndroid) {
+      try {
+        await _fullScreenIntentChannel.invokeMethod<void>('openSettings');
+        if (mounted) setState(() => _fullScreenIntentRequested = true);
+      } catch (_) {}
     }
 
     await _checkPermissions();
@@ -214,6 +228,15 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
                   title: 'Alarms',
                   description: 'To schedule precise reminders and safety checks.',
                   isGranted: _exactAlarmGranted,
+                ),
+                const SizedBox(height: 24),
+                // Full-screen intent Permission Item
+                _buildPermissionItem(
+                  icon: Icons.fullscreen,
+                  title: 'Full-screen intent',
+                  description:
+                      'To show alarm notifications when your device is locked.',
+                  isGranted: _fullScreenIntentRequested,
                 ),
               ],
 

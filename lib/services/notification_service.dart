@@ -1,13 +1,26 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:timezone/timezone.dart' as tz;
-import 'package:timezone/data/latest.dart' as tz;
-import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 import '../config.dart';
+import 'check_in_service.dart';
 import 'graphql_service.dart';
+
+/// Called by the plugin when user taps a notification action while app is in background.
+@pragma('vm:entry-point')
+void onBackgroundNotificationResponse(NotificationResponse response) {
+  if (response.actionId == 'dismiss') {
+    NotificationService.runCheckInFromDismiss(response.payload);
+  }
+  // open_app: app will be brought to foreground; onDidReceiveNotificationResponse
+  // will fire and onOpenAppFromNotification will navigate to HomeScreen.
+}
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -16,6 +29,12 @@ class NotificationService {
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
+
+  /// Called when user taps Dismiss on the alarm notification (optional, for showing snackbar).
+  static void Function(bool success)? onCheckInFromDismiss;
+
+  /// Called when user taps Open App on the alarm notification. App should navigate to HomeScreen.
+  static void Function()? onOpenAppFromNotification;
 
   Future<void> init() async {
     try {
@@ -45,11 +64,83 @@ class NotificationService {
 
     await flutterLocalNotificationsPlugin.initialize(
       settings: initializationSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) {
-        // Handle notification tap
-      },
+      onDidReceiveNotificationResponse: _onNotificationResponse,
+      onDidReceiveBackgroundNotificationResponse: onBackgroundNotificationResponse,
     );
   }
+
+  void _onNotificationResponse(NotificationResponse response) {
+    if (response.actionId == _kDismissActionId) {
+      _dismissAlarmNotification(response.id);
+      runCheckInFromDismiss(response.payload).then((success) {
+        onCheckInFromDismiss?.call(success);
+      });
+    } else if (response.actionId == _kOpenAppActionId) {
+      onOpenAppFromNotification?.call();
+    }
+  }
+
+  /// Dismisses the alarm notification. On Android, use tag so the correct notification is removed.
+  Future<void> _dismissAlarmNotification(int? notificationId) async {
+    if (notificationId == null) return;
+    await _cancelAlarmNotification(notificationId);
+  }
+
+  /// Public so main.dart can dismiss when app was launched from Dismiss action (e.g. terminated).
+  static Future<void> dismissAlarmNotification(int? notificationId) async {
+    if (notificationId == null) return;
+    await _instance._cancelAlarmNotification(notificationId);
+  }
+
+  Future<void> _cancelAlarmNotification(int notificationId) async {
+    try {
+      if (Platform.isAndroid) {
+        await flutterLocalNotificationsPlugin.cancel(
+          id: notificationId,
+          tag: _kAlarmNotificationTag,
+        );
+      } else {
+        await flutterLocalNotificationsPlugin.cancel(id: notificationId);
+      }
+    } catch (_) {
+      try {
+        await flutterLocalNotificationsPlugin.cancel(id: notificationId);
+      } catch (_) {}
+    }
+  }
+
+  /// Runs the same flow as HomeScreen._handleCheckIn: createCheckIn + completeDailyCheckIn.
+  /// Call when user taps Dismiss on alarm. [payload] may be null (e.g. action intent doesn't carry it).
+  static Future<bool> runCheckInFromDismiss(String? payload) async {
+    try {
+      TimeOfDay? checkInTime;
+      if (payload != null && payload.isNotEmpty) {
+        final map = jsonDecode(payload) as Map<String, dynamic>?;
+        final type = map?['type'] as String?;
+        final scheduledDate = map?['scheduledDate'] as String?;
+        if (type == 'daily_checkin') {
+          checkInTime = CheckInService.parseCheckInTimeFromScheduledDate(scheduledDate);
+        } else if (type == 'checkin_reminder') {
+          checkInTime = CheckInService.parseCheckInTimeFromReminderScheduledDate(scheduledDate);
+        }
+      }
+      if (checkInTime == null) {
+        checkInTime = await CheckInService.getCheckInTimeFromUser();
+      }
+      return await CheckInService.performCheckIn(checkInTime);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static const String _kDismissActionId = 'dismiss';
+  static const String _kOpenAppActionId = 'open_app';
+  /// Tag for alarm notifications so we can cancel them reliably on Android.
+  static const String _kAlarmNotificationTag = 'daily_checkin_alarm';
+  static const MethodChannel _platformChannel =
+      MethodChannel('com.infodat.iamokay/full_screen_intent');
+  static String? _cachedAlarmUri;
+  static bool _alarmUriTried = false;
 
   Future<bool> requestPermissions() async {
     bool? iosGranted = await flutterLocalNotificationsPlugin
@@ -134,7 +225,7 @@ class NotificationService {
       final startDateIso = '${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}T00:00:00Z';
       await GraphQLService.scheduleEmergencySmsTasks(
         days: 7,
-        timeZone: timeZoneInfo?.identifier ?? 'UTC',
+        timeZone: timeZoneInfo.identifier ?? 'UTC',
         checkInOffset: AppConfig.emergencySmsDelayMinutes,
         startDate: startDateIso,
       );
@@ -146,22 +237,88 @@ class NotificationService {
   /// Number of days to schedule ahead (one-off per day on both Android and iOS).
   static const int _scheduleDaysAhead = 15;
 
+  /// After this duration the alarm notification is auto-cancelled (stops ringing).
+  static const int _alarmRingDurationMinutes = 1;
+
+  /// Vibration pattern for ~1 min: 800ms on, 400ms off, repeated (same duration as alarm ring).
+  static Int64List _alarmVibrationPattern() {
+    const int vibrateMs = 800;
+    const int pauseMs = 400;
+    const int totalSeconds = _alarmRingDurationMinutes * 60;
+    const int cycleMs = vibrateMs + pauseMs;
+    final int repeatCount = (totalSeconds * 1000) ~/ cycleMs;
+    final List<int> pattern = [0];
+    for (int i = 0; i < repeatCount; i++) {
+      pattern.add(vibrateMs);
+      pattern.add(pauseMs);
+    }
+    return Int64List.fromList(pattern);
+  }
+
+  /// Alarm-style notification for daily check-in: full-screen intent, ringing alarm sound, strong vibration, Dismiss action.
+  static NotificationDetails _alarmNotificationDetails(String? alarmUri) {
+    return NotificationDetails(
+      android: AndroidNotificationDetails(
+        'daily_checkin_alarm_channel_v3',
+        'Daily Check-in Alarm',
+        channelDescription: 'Ringing alarm for daily check-in with sound and vibration',
+        tag: _kAlarmNotificationTag,
+        importance: Importance.max,
+        priority: Priority.max,
+        channelBypassDnd: true,
+        fullScreenIntent: true,
+        category: AndroidNotificationCategory.alarm,
+        playSound: true,
+        sound: alarmUri != null && alarmUri.isNotEmpty
+            ? UriAndroidNotificationSound(alarmUri)
+            : null,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
+        enableVibration: true,
+        // Strong alarm pattern: vibrate 800ms, pause 400ms, repeated for ~1 min (matches alarm ring duration)
+        vibrationPattern: _alarmVibrationPattern(),
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
+    );
+  }
+
+  static NotificationDetails _reminderNotificationDetails() {
+    return const NotificationDetails(
+      android: AndroidNotificationDetails(
+        'daily_checkin_channel_v3',
+        'Daily Check-in',
+        channelDescription: 'Reminds you to check in daily',
+        importance: Importance.max,
+        priority: Priority.high,
+      ),
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
+    );
+  }
+
   Future<void> _scheduleNotifications(tz.TZDateTime startDate, int startId, String type, String title, String body) async {
     try {
-      final notificationDetails = const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'daily_checkin_channel_v3',
-          'Daily Check-in',
-          channelDescription: 'Reminds you to check in daily',
-          importance: Importance.max,
-          priority: Priority.high,
-        ),
-        iOS: DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-        ),
-      );
+      // Fetch system alarm URI once (Android) for ringing alarm sound
+      if ((type == 'daily_checkin' || type == 'checkin_reminder') &&
+          Platform.isAndroid &&
+          !_alarmUriTried) {
+        _alarmUriTried = true;
+        try {
+          _cachedAlarmUri =
+              await _platformChannel.invokeMethod<String>('getAlarmUri');
+        } catch (_) {
+          _cachedAlarmUri = null;
+        }
+      }
+      final notificationDetails = (type == 'daily_checkin' || type == 'checkin_reminder')
+          ? _alarmNotificationDetails(_cachedAlarmUri)
+          : _reminderNotificationDetails();
 
       for (int i = 0; i < _scheduleDaysAhead; i++) {
         final tz.TZDateTime notificationDate = startDate.add(Duration(days: i));
@@ -169,22 +326,37 @@ class NotificationService {
           'type': type,
           'scheduledDate': notificationDate.toIso8601String(),
         });
+        final notificationId = startId + i;
         try {
           await flutterLocalNotificationsPlugin.zonedSchedule(
-            id: startId + i,
+            id: notificationId,
             title: title,
             body: body,
             scheduledDate: notificationDate,
             notificationDetails: notificationDetails,
-            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+            androidScheduleMode: AndroidScheduleMode.alarmClock,
             payload: payload,
           );
+          if (Platform.isAndroid &&
+              (type == 'daily_checkin' || type == 'checkin_reminder')) {
+            final cancelAtMillis = notificationDate.millisecondsSinceEpoch +
+                _alarmRingDurationMinutes * 60 * 1000;
+            try {
+              await _platformChannel.invokeMethod<bool>('scheduleAlarmCancel', {
+                'notificationId': notificationId,
+                'tag': _kAlarmNotificationTag,
+                'cancelAtMillis': cancelAtMillis,
+              });
+            } catch (_) {
+              // Ignore if scheduling cancel fails
+            }
+          }
         } catch (e) {
-          // Schedule failed for day $i
+          debugPrint('Schedule failed for $type on day $i: $e');
         }
       }
     } catch (e) {
-      // Error scheduling notification
+      debugPrint('Error scheduling $type notifications: $e');
     }
   }
 
@@ -224,7 +396,7 @@ class NotificationService {
       final timeZoneInfo = await FlutterTimezone.getLocalTimezone();
       await GraphQLService.scheduleEmergencySmsTasks(
         days: 7,
-        timeZone: timeZoneInfo?.identifier ?? 'UTC',
+        timeZone: timeZoneInfo.identifier ?? 'UTC',
         checkInOffset: AppConfig.emergencySmsDelayMinutes,
         startDate: startDateIso,
       );

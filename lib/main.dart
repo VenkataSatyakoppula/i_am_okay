@@ -1,18 +1,75 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'screens/home_screen.dart';
 import 'screens/landing_screen.dart';
+import 'services/check_in_service.dart';
 import 'services/notification_service.dart';
+
+final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  NotificationService.onCheckInFromDismiss = (bool success) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      rootScaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(
+            success
+                ? 'Check-in successful! You are okay!'
+                : 'Check-in failed. Please try again from the app.',
+          ),
+          backgroundColor: success ? Colors.green : Colors.red,
+        ),
+      );
+    });
+  };
+  NotificationService.onOpenAppFromNotification = () {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = rootNavigatorKey.currentContext;
+      if (context != null && context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          (route) => false,
+        );
+      }
+    });
+  };
   await NotificationService().init();
-  
+
+  // Handle app opened from alarm notification (e.g. app was terminated)
+  final initialResponse =
+      await NotificationService().flutterLocalNotificationsPlugin
+          .getNotificationAppLaunchDetails()
+          .then((d) => d?.notificationResponse);
+  if (initialResponse != null) {
+    if (initialResponse.actionId == 'dismiss') {
+      await NotificationService.dismissAlarmNotification(initialResponse.id);
+      final success = await NotificationService.runCheckInFromDismiss(
+        initialResponse.payload,
+      );
+      NotificationService.onCheckInFromDismiss?.call(success);
+    } else if (initialResponse.actionId == 'open_app') {
+      // Navigate to HomeScreen after app mounts
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final context = rootNavigatorKey.currentContext;
+        if (context != null && context.mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+            (route) => false,
+          );
+        }
+      });
+    }
+  }
+
   // Set preferred orientations
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  
+
   runApp(const MyApp());
 }
 
@@ -22,6 +79,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: rootNavigatorKey,
+      scaffoldMessengerKey: rootScaffoldMessengerKey,
       title: 'IAmOkay',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
