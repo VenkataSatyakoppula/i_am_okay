@@ -277,13 +277,13 @@ class NotificationService {
         // Strong alarm pattern: vibrate 800ms, pause 400ms, repeated for ~1 min (matches alarm ring duration)
         vibrationPattern: _alarmVibrationPattern(),
       ),
+      // iOS: preview.mp3 in Runner bundle. For best compatibility use .caf (max 30 sec per Apple); see script in ios/convert_alarm_sound.sh
       iOS: const DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
         presentBanner: true,
-        interruptionLevel: InterruptionLevel.timeSensitive,
-        sound: 'default',
+        sound: 'preview.caf',
       ),
     );
   }
