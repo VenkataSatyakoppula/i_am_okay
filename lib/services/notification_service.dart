@@ -281,6 +281,9 @@ class NotificationService {
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
+        presentBanner: true,
+        interruptionLevel: InterruptionLevel.timeSensitive,
+        sound: 'default',
       ),
     );
   }
