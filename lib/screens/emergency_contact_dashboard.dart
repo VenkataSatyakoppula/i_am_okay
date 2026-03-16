@@ -6,6 +6,7 @@ import 'package:IamOkay/screens/landing_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/notification_service.dart';
 import '../services/graphql_service.dart';
+import '../utils/phone_display_helper.dart';
 
 class EmergencyContactDashboard extends StatefulWidget {
   const EmergencyContactDashboard({super.key});
@@ -61,10 +62,11 @@ class _EmergencyContactDashboardState extends State<EmergencyContactDashboard> {
     }
   }
 
-  Future<void> _makePhoneCall(String phoneNumber) async {
+  Future<void> _makePhoneCall(String phoneNumber, [String? phoneExt]) async {
+    final e164 = toE164(phoneNumber, phoneExt);
     final Uri launchUri = Uri(
       scheme: 'tel',
-      path: phoneNumber,
+      path: e164,
     );
     if (await canLaunchUrl(launchUri)) {
       await launchUrl(launchUri);
@@ -224,12 +226,12 @@ class _EmergencyContactDashboardState extends State<EmergencyContactDashboard> {
                       const Text('Mobile Number',
                           style: TextStyle(color: Colors.grey, fontSize: 12)),
                       const SizedBox(height: 4),
-                      Text(user.mobileNumber,
+                      Text(formatPhoneDisplay(user.mobileNumber, user.phoneExt),
                           style: const TextStyle(fontWeight: FontWeight.w500)),
                     ],
                   ),
                   TextButton.icon(
-                    onPressed: () => _makePhoneCall(user.mobileNumber),
+                    onPressed: () => _makePhoneCall(user.mobileNumber, user.phoneExt),
                     icon: Icon(Icons.call, color: theme.primaryColor),
                     label:
                         Text('Call', style: TextStyle(color: theme.primaryColor)),

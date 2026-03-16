@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../config.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/loading_overlay.dart';
@@ -15,6 +16,7 @@ import 'permission_screen.dart';
 class OtpScreen extends StatefulWidget {
   final bool isRegistration;
   final String? mobileNumber;
+  final String? phoneExt;
   final Map<String, dynamic>? userData;
   final String? role;
 
@@ -22,6 +24,7 @@ class OtpScreen extends StatefulWidget {
     super.key,
     this.isRegistration = false,
     this.mobileNumber,
+    this.phoneExt,
     this.userData,
     this.role,
   });
@@ -70,7 +73,10 @@ class _OtpScreenState extends State<OtpScreen> {
 
     LoadingOverlay.show(context);
     try {
-      await GraphQLService.requestOtp(widget.mobileNumber!);
+      await GraphQLService.requestOtp(
+        widget.mobileNumber!,
+        phoneExt: widget.phoneExt ?? AppConfig.defaultPhoneExt,
+      );
       
       if (mounted) {
         LoadingOverlay.hide(context);
@@ -114,6 +120,7 @@ class _OtpScreenState extends State<OtpScreen> {
       final authPayload = await GraphQLService.verifyOtp(
         widget.mobileNumber!,
         otp,
+        phoneExt: widget.phoneExt ?? AppConfig.defaultPhoneExt,
         userDetails: widget.isRegistration && widget.userData != null
             ? Map<String, dynamic>.from(widget.userData!)
             : null,
@@ -127,6 +134,8 @@ class _OtpScreenState extends State<OtpScreen> {
       if (widget.mobileNumber != null) {
         await _storage.write(key: 'mobile_number', value: widget.mobileNumber!);
       }
+      final ext = widget.phoneExt ?? AppConfig.defaultPhoneExt;
+      await _storage.write(key: 'phone_ext', value: ext);
 
       if (user != null) {
         await _storage.write(key: 'user_id', value: user.id);

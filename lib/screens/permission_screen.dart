@@ -167,41 +167,45 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
           : null,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 28.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-               Center(
+              Center(
                 child: SvgPicture.asset(
                   'assets/icons/landing_logo.svg',
-                  height: 80,
+                  height: 72,
                   colorFilter: const ColorFilter.mode(
                     Color(0xFF1F4ED8),
                     BlendMode.srcIn,
                   ),
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
               const Text(
                 'Permissions Required',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 28.0,
+                  fontSize: 26.0,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFF000000),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
               const Text(
                 'To ensure your safety and provide the best experience, we need access to the following permissions:',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 16.0,
+                  fontSize: 15.0,
                   color: Color(0xFF333333),
                 ),
               ),
-              const SizedBox(height: 40),
-              
+              const SizedBox(height: 24),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
               // Notification Permission Item
               _buildPermissionItem(
                 icon: Icons.notifications_active_outlined,
@@ -209,9 +213,7 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
                 description: 'To remind you to check in daily and ensure you are okay.',
                 isGranted: _notificationGranted,
               ),
-              
-              const SizedBox(height: 24),
-              
+              const SizedBox(height: 20),
               // Location Permission Item
               _buildPermissionItem(
                 icon: Icons.location_on_outlined,
@@ -221,7 +223,7 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
               ),
 
               if (Platform.isAndroid) ...[
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
                 // Exact Alarm Permission Item
                 _buildPermissionItem(
                   icon: Icons.alarm,
@@ -229,19 +231,29 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
                   description: 'To schedule precise reminders and safety checks.',
                   isGranted: _exactAlarmGranted,
                 ),
-                const SizedBox(height: 24),
-                // Full-screen intent Permission Item
-                _buildPermissionItem(
-                  icon: Icons.fullscreen,
-                  title: 'Full-screen intent',
-                  description:
-                      'To show alarm notifications when your device is locked.',
-                  isGranted: _fullScreenIntentRequested,
+                const SizedBox(height: 20),
+                // Full-screen intent Permission Item (tap to open settings)
+                GestureDetector(
+                  onTap: () async {
+                    try {
+                      await _fullScreenIntentChannel.invokeMethod<void>('openSettings');
+                      if (mounted) setState(() => _fullScreenIntentRequested = true);
+                    } catch (_) {}
+                  },
+                  child: _buildPermissionItem(
+                    icon: Icons.fullscreen,
+                    title: 'Full-screen intent',
+                    description:
+                        'To open the app when the alarm rings on the lock screen. Tap to enable in Settings.',
+                    isGranted: _fullScreenIntentRequested,
+                  ),
                 ),
               ],
-
-              const Spacer(),
-
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               if (!_allRequiredPermissionsGranted)
                 CustomButton(
                   text: 'Grant Permissions',
@@ -285,18 +297,18 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             color: isGranted ? const Color(0xFFE8F5E9) : const Color(0xFFF5F5F5),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(
             icon,
             color: isGranted ? Colors.green : const Color(0xFF666666),
-            size: 28,
+            size: 24,
           ),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,12 +316,14 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  Flexible(
+                    child: Text(
                     title,
                     style: const TextStyle(
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF000000),
+                      fontSize: 16.0,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF000000),
+                      ),
                     ),
                   ),
                   if (isGranted)
@@ -324,7 +338,7 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
               Text(
                 description,
                 style: const TextStyle(
-                  fontSize: 14.0,
+                  fontSize: 13.0,
                   color: Color(0xFF666666),
                 ),
               ),

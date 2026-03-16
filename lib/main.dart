@@ -38,20 +38,25 @@ void main() async {
   };
   await NotificationService().init();
 
-  // Handle app opened from alarm notification (e.g. app was terminated)
-  final initialResponse =
-      await NotificationService().flutterLocalNotificationsPlugin
-          .getNotificationAppLaunchDetails()
-          .then((d) => d?.notificationResponse);
-  if (initialResponse != null) {
-    if (initialResponse.actionId == 'dismiss') {
+  // Handle app opened from alarm (full-screen intent or notification tap)
+  final launchDetails = await NotificationService().flutterLocalNotificationsPlugin
+      .getNotificationAppLaunchDetails();
+  final launchedByNotification = launchDetails?.didNotificationLaunchApp ?? false;
+  final initialResponse = launchDetails?.notificationResponse;
+
+  if (launchedByNotification) {
+    if (initialResponse != null && initialResponse.actionId == 'dismiss') {
       await NotificationService.dismissAlarmNotification(initialResponse.id);
       final success = await NotificationService.runCheckInFromDismiss(
         initialResponse.payload,
       );
       NotificationService.onCheckInFromDismiss?.call(success);
-    } else if (initialResponse.actionId == 'open_app') {
-      // Navigate to HomeScreen after app mounts
+    }
+    final shouldOpenHome = initialResponse == null ||
+        initialResponse.actionId == 'open_app' ||
+        NotificationService.isAlarmPayload(initialResponse.payload);
+    if (shouldOpenHome) {
+      // Open HomeScreen when alarm rings (full-screen intent) or notification tap
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final context = rootNavigatorKey.currentContext;
         if (context != null && context.mounted) {

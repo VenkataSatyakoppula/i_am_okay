@@ -56,13 +56,18 @@ class GraphQLService {
 
   static Future<String?> requestOtp(
     String mobile, {
+    String? phoneExt,
     bool isRegister = false,
   }) async {
     final client = await getClient();
     final result = await client.mutate(
       MutationOptions(
         document: gql(requestOtpMutation),
-        variables: {'mobile': mobile, 'isRegister': isRegister},
+        variables: {
+          'mobile': mobile,
+          'phoneExt': phoneExt,
+          'isRegister': isRegister,
+        },
       ),
     );
 
@@ -76,6 +81,7 @@ class GraphQLService {
   static Future<AuthPayload> verifyOtp(
     String mobile,
     String otp, {
+    String? phoneExt,
     Map<String, dynamic>? userDetails,
     bool isEmergencyContact = false,
   }) async {
@@ -86,6 +92,7 @@ class GraphQLService {
         variables: {
           'mobile': mobile,
           'otp': otp,
+          'phoneExt': phoneExt,
           'userDetails': userDetails,
           'isEmergencyContact': isEmergencyContact,
         },
@@ -163,7 +170,9 @@ class GraphQLService {
         [];
   }
 
+  /// [phoneExt] is required (e.g. "1" US, "44" UK). Send [mobileNumber] when checking by phone.
   static Future<bool> checkUserExists({
+    required String phoneExt,
     String? mobileNumber,
     String? email,
   }) async {
@@ -171,7 +180,11 @@ class GraphQLService {
     final result = await client.query(
       QueryOptions(
         document: gql(checkUserExistsQuery),
-        variables: {'mobileNumber': mobileNumber, 'email': email},
+        variables: {
+          'phoneExt': phoneExt,
+          'mobileNumber': mobileNumber,
+          'email': email,
+        },
         fetchPolicy: FetchPolicy.networkOnly,
       ),
     );

@@ -10,8 +10,8 @@ const String getUsersQuery = """
 """;
 
 const String checkUserExistsQuery = """
-  query CheckUserExists(\$mobileNumber: String, \$email: String) {
-    checkUserExists(mobileNumber: \$mobileNumber, email: \$email)
+  query CheckUserExists(\$phoneExt: String!, \$mobileNumber: String, \$email: String) {
+    checkUserExists(phoneExt: \$phoneExt, mobileNumber: \$mobileNumber, email: \$email)
   }
 """;
 

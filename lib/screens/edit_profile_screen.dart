@@ -44,6 +44,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
   ];
 
+  String? _normalizeState(String? state) {
+    if (state == null || state.isEmpty) return null;
+    return _states.contains(state) ? state : null;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -53,7 +58,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _address1Controller = TextEditingController(text: widget.user.address?.address1);
     _address2Controller = TextEditingController(text: widget.user.address?.address2);
     _cityController = TextEditingController(text: widget.user.address?.city);
-    _selectedState = widget.user.address?.state;
+    _selectedState = _normalizeState(widget.user.address?.state);
     _zipCodeController = TextEditingController(text: widget.user.address?.zipCode);
   }
 
@@ -285,7 +290,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       child: CustomDropdownField<String>(
                         label: 'State',
                         hint: 'Select State',
-                        value: _selectedState,
+                        value: _normalizeState(_selectedState),
                         items: _states.map((String state) {
                           return DropdownMenuItem<String>(
                             value: state,

@@ -2,6 +2,7 @@ const String userFragment = """
   fragment UserFields on User {
     id
     mobileNumber
+    phoneExt
     email
     createdAt
     updatedAt
@@ -21,9 +22,11 @@ const String userFragment = """
       name
       relation
       phone
+      phoneExt
       email
       smsOptIn
       smsEnabled
+      whatsAppEnabled
     }
     reminderSettings {
       checkInTime

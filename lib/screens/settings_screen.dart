@@ -4,6 +4,7 @@ import '../widgets/custom_button.dart';
 import '../services/graphql_service.dart';
 import '../services/notification_service.dart';
 import '../models/user_model.dart';
+import '../utils/phone_display_helper.dart';
 import 'landing_screen.dart';
 import 'about_us_screen.dart';
 import 'daily_reminder_screen.dart';
@@ -196,7 +197,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
         const SizedBox(height: 8),
         Text(
-          _formatPhoneNumber(_user?.mobileNumber ?? ''),
+          formatPhoneDisplay(_user?.mobileNumber ?? '', _user?.phoneExt),
           style: const TextStyle(
             fontSize: 18.0,
             color: Color(0xFF666666),
@@ -377,24 +378,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       subtitle: subtitle != null ? Text(subtitle, style: const TextStyle(color: Color(0xFF666666))) : null,
       trailing: onTap != null ? const Icon(Icons.arrow_forward_ios, size: 16) : null,
     );
-  }
-
-  String _formatPhoneNumber(String phone) {
-    // Remove all non-digit characters
-    String digits = phone.replaceAll(RegExp(r'\D'), '');
-
-    // Check if it starts with 1 (US country code) and has 11 digits, remove the 1
-    if (digits.length == 11 && digits.startsWith('1')) {
-      digits = digits.substring(1);
-    }
-
-    // If we have 10 digits, format it
-    if (digits.length == 10) {
-      return '+1 (${digits.substring(0, 3)}) ${digits.substring(3, 6)}-${digits.substring(6)}';
-    }
-
-    // Fallback to original or return empty if input was empty
-    return phone;
   }
 
   Future<void> _logout() async {

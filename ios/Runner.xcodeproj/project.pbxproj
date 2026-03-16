@@ -17,6 +17,7 @@
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		FB301281BED7C3A6163348B1 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DD2FCD5A3019CF0B63C78C5 /* Pods_RunnerTests.framework */; };
 		B2C3D4E52F6A789012345678 /* preview.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D41E5F678901234567 /* preview.mp3 */; };
+		D4E5F6A73B8C901234567890 /* preview.caf in Resources */ = {isa = PBXBuildFile; fileRef = E5F6A7B84C9D012345678901 /* preview.caf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -67,6 +68,7 @@
 		D512907C50006A8F682E77FC /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		F8F0BFB725C1A0C5A14495A8 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 		A1B2C3D41E5F678901234567 /* preview.mp3 */ = {isa = PBXFileReference; lastKnownFileType = file; path = preview.mp3; sourceTree = "<group>"; };
+		E5F6A7B84C9D012345678901 /* preview.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = preview.caf; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -150,6 +152,7 @@
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 				A1B2C3D41E5F678901234567 /* preview.mp3 */,
+				E5F6A7B84C9D012345678901 /* preview.caf */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -268,6 +271,7 @@
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
 				B2C3D4E52F6A789012345678 /* preview.mp3 in Resources */,
+				D4E5F6A73B8C901234567890 /* preview.caf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

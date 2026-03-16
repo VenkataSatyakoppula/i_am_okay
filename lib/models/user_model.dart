@@ -27,6 +27,7 @@ class AuthPayload {
 class User {
   final String id;
   final String mobileNumber;
+  final String? phoneExt;
   final String? email;
   final String? role;
   final DateTime? createdAt;
@@ -39,6 +40,7 @@ class User {
   User({
     required this.id,
     required this.mobileNumber,
+    this.phoneExt,
     this.email,
     this.role,
     this.createdAt,
@@ -53,6 +55,7 @@ class User {
     return User(
       id: json['id'] as String,
       mobileNumber: json['mobileNumber'] as String,
+      phoneExt: json['phoneExt'] as String?,
       email: json['email'] as String?,
       role: json['role'] as String?,
       createdAt: json['createdAt'] != null
@@ -82,6 +85,7 @@ class User {
     return {
       'id': id,
       'mobileNumber': mobileNumber,
+      'phoneExt': phoneExt,
       'email': email,
       'role': role,
       'createdAt': createdAt?.toIso8601String(),
@@ -163,17 +167,21 @@ class EmergencyContact {
   final String? name;
   final String? relation;
   final String? phone;
+  final String? phoneExt;
   final String? email;
   final bool? smsOptIn;
   final bool? smsEnabled;
+  final bool? whatsAppEnabled;
 
   EmergencyContact({
     this.name,
     this.relation,
     this.phone,
+    this.phoneExt,
     this.email,
     this.smsOptIn,
     this.smsEnabled,
+    this.whatsAppEnabled,
   });
 
   factory EmergencyContact.fromJson(Map<String, dynamic> json) {
@@ -181,9 +189,11 @@ class EmergencyContact {
       name: json['name'] as String?,
       relation: json['relation'] as String?,
       phone: json['phone'] as String?,
+      phoneExt: json['phoneExt'] as String?,
       email: json['email'] as String?,
       smsOptIn: json['smsOptIn'] as bool?,
       smsEnabled: json['smsEnabled'] as bool?,
+      whatsAppEnabled: json['whatsAppEnabled'] as bool?,
     );
   }
 
@@ -192,8 +202,11 @@ class EmergencyContact {
       'name': name,
       'relation': relation,
       'phone': phone,
+      'phoneExt': phoneExt,
       'email': email,
       'smsOptIn': smsOptIn,
+      'smsEnabled': smsEnabled,
+      'whatsAppEnabled': whatsAppEnabled,
     };
   }
 }

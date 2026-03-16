@@ -36,6 +36,18 @@ class NotificationService {
   /// Called when user taps Open App on the alarm notification. App should navigate to HomeScreen.
   static void Function()? onOpenAppFromNotification;
 
+  /// Returns true if [payload] is for daily_checkin or checkin_reminder alarm.
+  static bool isAlarmPayload(String? payload) {
+    if (payload == null || payload.isEmpty) return false;
+    try {
+      final map = jsonDecode(payload) as Map<String, dynamic>?;
+      final type = map?['type'] as String?;
+      return type == 'daily_checkin' || type == 'checkin_reminder';
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> init() async {
     try {
       tz.initializeTimeZones();
@@ -277,7 +289,7 @@ class NotificationService {
         // Strong alarm pattern: vibrate 800ms, pause 400ms, repeated for ~1 min (matches alarm ring duration)
         vibrationPattern: _alarmVibrationPattern(),
       ),
-      // iOS: preview.mp3 in Runner bundle. For best compatibility use .caf (max 30 sec per Apple); see script in ios/convert_alarm_sound.sh
+      // iOS: custom alarm sound must be .caf/.aiff/.wav in Runner bundle, max 30 sec. Add preview.caf to Xcode Runner target Resources.
       iOS: const DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,

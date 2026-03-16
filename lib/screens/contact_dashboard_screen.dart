@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/user_model.dart';
 import '../services/graphql_service.dart';
+import '../utils/phone_display_helper.dart';
 import '../services/notification_service.dart';
 import 'landing_screen.dart';
 
@@ -105,7 +106,7 @@ class _ContactDashboardScreenState extends State<ContactDashboardScreen> {
                   itemBuilder: (context, index) {
                     final user = _usersWhoAddedMe[index];
                     final name = user.name?.firstName ?? 'Unknown';
-                    final phone = user.mobileNumber;
+                    final phoneDisplay = formatPhoneDisplay(user.mobileNumber, user.phoneExt);
                     
                     return Card(
                       elevation: 2,
@@ -119,7 +120,7 @@ class _ContactDashboardScreenState extends State<ContactDashboardScreen> {
                           ),
                         ),
                         title: Text('$name ${user.name?.lastName ?? ''}'),
-                        subtitle: Text(phone),
+                        subtitle: Text(phoneDisplay),
                         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                         onTap: () {
                           // Potential future feature: View detailed status history

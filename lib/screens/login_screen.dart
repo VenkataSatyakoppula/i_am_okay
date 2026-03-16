@@ -3,8 +3,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../config.dart';
+import '../constants/countries.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
+import '../widgets/custom_dropdown_field.dart';
 import '../widgets/loading_overlay.dart';
 import '../services/graphql_service.dart';
 import '../services/biometric_service.dart';
@@ -36,6 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _storage = const FlutterSecureStorage();
   bool _canUseBiometric = false;
+  CountryOption _selectedCountry = supportedCountries.first;
 
   @override
   void initState() {
@@ -128,7 +132,11 @@ class _LoginScreenState extends State<LoginScreen> {
     LoadingOverlay.show(context);
 
     try {
-      final otpResult = await GraphQLService.requestOtp(mobile);
+      final phoneExt = _selectedCountry.phoneExt;
+      final otpResult = await GraphQLService.requestOtp(
+        mobile,
+        phoneExt: phoneExt,
+      );
 
       if (mounted) {
         LoadingOverlay.hide(context);
@@ -143,6 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
               builder: (context) => OtpScreen(
                 isRegistration: false,
                 mobileNumber: mobile,
+                phoneExt: phoneExt,
                 role: role,
               ),
             ),
@@ -271,6 +280,21 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         const SizedBox(height: 48),
+        CustomDropdownField<CountryOption>(
+          label: 'Country',
+          hint: 'Select country',
+          value: _selectedCountry,
+          items: supportedCountries
+              .map((c) => DropdownMenuItem<CountryOption>(
+                    value: c,
+                    child: Text(c.displayLabel),
+                  ))
+              .toList(),
+          onChanged: (v) {
+            if (v != null) setState(() => _selectedCountry = v);
+          },
+        ),
+        const SizedBox(height: 24),
         CustomTextField(
           label: 'Mobile Number',
           hint: 'Enter your mobile number',

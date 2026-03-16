@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../config.dart';
+import '../constants/countries.dart';
 import '../models/user_model.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_dropdown_field.dart';
 import '../services/graphql_service.dart';
 import '../utils/phone_input_formatter.dart';
+import '../utils/phone_display_helper.dart';
 import 'daily_reminder_screen.dart';
 
 class EmergencyContactScreen extends StatefulWidget {
@@ -39,6 +42,7 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
   // Track which contact is being edited. Null means adding a new contact.
   int? _editingIndex;
   bool _hasConsented = false;
+  CountryOption _selectedContactCountry = supportedCountries.first;
 
   @override
   void initState() {
@@ -62,11 +66,13 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
     _contacts.clear();
     _contacts.addAll(user.emergencyContacts.map((c) => {
           'name': c.name ?? '',
-          'relation': c.relation ?? 'Other',
+          'relation': _normalizeRelation(c.relation),
           'phone': c.phone ?? '',
+          'phoneExt': c.phoneExt ?? AppConfig.defaultPhoneExt,
           'email': c.email,
           'smsOptIn': c.smsOptIn ?? true,
           'smsEnabled': c.smsEnabled ?? false,
+          'whatsAppEnabled': c.whatsAppEnabled ?? false,
         }));
     _isFormVisible = _contacts.isEmpty;
   }
@@ -121,6 +127,58 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
     'Other'
   ];
 
+  String _normalizeRelation(String? relation) {
+    if (relation == null || relation.isEmpty) return 'Other';
+    return _relations.contains(relation) ? relation : 'Other';
+  }
+
+  List<Widget> _buildChannelBadges(Map<String, dynamic> contact) {
+    final List<Widget> badges = [];
+    if (contact['smsEnabled'] == true) {
+      badges.add(const SizedBox(width: 8));
+      badges.add(
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1F4ED8).withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: const Color(0xFF1F4ED8), width: 1),
+          ),
+          child: const Text(
+            'SMS',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1F4ED8),
+            ),
+          ),
+        ),
+      );
+    }
+    if (contact['whatsAppEnabled'] == true) {
+      badges.add(const SizedBox(width: 8));
+      badges.add(
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: const Color(0xFF25D366).withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: const Color(0xFF25D366), width: 1),
+          ),
+          child: const Text(
+            'WhatsApp',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF128C7E),
+            ),
+          ),
+        ),
+      );
+    }
+    return badges;
+  }
+
   Future<void> _updateBackend({bool showSuccessMessage = true}) async {
     try {
       final userId = await _storage.read(key: 'user_id');
@@ -133,10 +191,13 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
           'name': c['name'],
           'relation': c['relation'],
           'phone': phone,
+          'phoneExt': c['phoneExt'] ?? AppConfig.defaultPhoneExt,
           'email': (c['email'] == null || c['email'].toString().isEmpty)
               ? null
               : c['email'],
           'smsOptIn': c['smsOptIn'] == true,
+          'smsEnabled': c['smsEnabled'] == true,
+          'whatsAppEnabled': c['whatsAppEnabled'] == true,
         };
       }).toList();
 
@@ -175,15 +236,6 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
         }
       }
     }
-  }
-
-  String _formatPhoneDisplay(String phone) {
-    // Assuming 10 digits
-    final digits = phone.replaceAll(RegExp(r'\D'), '');
-    if (digits.length == 10) {
-      return '(${digits.substring(0, 3)}) ${digits.substring(3, 6)}-${digits.substring(6, 10)}';
-    }
-    return phone;
   }
 
   bool _saveContact() {
@@ -228,16 +280,23 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
       'relation': _selectedRelation!,
       'name': _nameController.text.trim(),
       'phone': _phoneController.text.trim(),
+      'phoneExt': _selectedContactCountry.phoneExt,
       'email': _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
       'smsOptIn': _hasConsented,
       'smsEnabled': false,
+      'whatsAppEnabled': false,
     };
 
     setState(() {
       if (_editingIndex != null) {
-        // Update existing; preserve smsEnabled (read-only from backend)
+        // Update existing; preserve smsEnabled, whatsAppEnabled, phoneExt (read-only from backend)
         final existing = _contacts[_editingIndex!];
-        _contacts[_editingIndex!] = {...newContact, 'smsEnabled': existing['smsEnabled'] ?? false};
+        _contacts[_editingIndex!] = {
+          ...newContact,
+          'smsEnabled': existing['smsEnabled'] ?? false,
+          'whatsAppEnabled': existing['whatsAppEnabled'] ?? false,
+          'phoneExt': _selectedContactCountry.phoneExt,
+        };
         _editingIndex = null;
       } else {
         // Add new
@@ -246,6 +305,7 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
       
       // Reset form
       _selectedRelation = null;
+      _selectedContactCountry = supportedCountries.first;
       _nameController.clear();
       _phoneController.clear();
       _emailController.clear();
@@ -286,16 +346,22 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
 
   void _editContact(int index) {
     final contact = _contacts[index];
+    final ext = contact['phoneExt']?.toString() ?? AppConfig.defaultPhoneExt;
+    final country = supportedCountries.firstWhere(
+      (c) => c.phoneExt == ext,
+      orElse: () => supportedCountries.first,
+    );
     setState(() {
       _editingIndex = index;
       _nameController.text = contact['name'];
       
-      // Format phone for the controller if it's just digits
-      String rawPhone = contact['phone'];
-      _phoneController.text = _formatPhoneDisplay(rawPhone);
+      // Show national number only in phone field; country is in the Country dropdown
+      String rawPhone = contact['phone']?.toString() ?? '';
+      _phoneController.text = formatPhoneNational(rawPhone);
       
       _emailController.text = contact['email'] ?? '';
-      _selectedRelation = contact['relation'];
+      _selectedRelation = _normalizeRelation(contact['relation']?.toString());
+      _selectedContactCountry = country;
       
       _hasConsented = contact['smsOptIn'] == true;
       _isFormVisible = true;
@@ -413,29 +479,11 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                  if (contact['smsEnabled'] == true) ...[
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF1F4ED8).withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(6),
-                                        border: Border.all(color: const Color(0xFF1F4ED8), width: 1),
-                                      ),
-                                      child: const Text(
-                                        'Verified',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          color: Color(0xFF1F4ED8),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                  ..._buildChannelBadges(contact),
                                 ],
                               ),
                               Text(
-                                '${contact['relation']} • ${_formatPhoneDisplay(contact['phone'])}',
+                                '${contact['relation']} • ${formatPhoneDisplay(contact['phone'].toString(), contact['phoneExt']?.toString())}',
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ],
@@ -480,7 +528,7 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
                         CustomDropdownField<String>(
                           label: 'Relation',
                           hint: 'Select relation',
-                          value: _selectedRelation,
+                          value: _selectedRelation != null ? _normalizeRelation(_selectedRelation) : null,
                           items: _relations.map((String relation) {
                             return DropdownMenuItem<String>(
                               value: relation,
@@ -512,6 +560,21 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
                               return 'Only alphabets are allowed';
                             }
                             return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        CustomDropdownField<CountryOption>(
+                          label: 'Country',
+                          hint: 'Select country',
+                          value: _selectedContactCountry,
+                          items: supportedCountries
+                              .map((c) => DropdownMenuItem<CountryOption>(
+                                    value: c,
+                                    child: Text(c.displayLabel),
+                                  ))
+                              .toList(),
+                          onChanged: (v) {
+                            if (v != null) setState(() => _selectedContactCountry = v);
                           },
                         ),
                         const SizedBox(height: 16),

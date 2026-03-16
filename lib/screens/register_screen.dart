@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../config.dart';
+import '../constants/countries.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_dropdown_field.dart';
@@ -39,6 +41,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
 
   String? _selectedState;
+  CountryOption _selectedCountry = supportedCountries.first;
 
   // Mock data for Zip to State mapping
   final Map<String, String> _zipToState = {
@@ -123,8 +126,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final mobile = rawMobile.replaceAll(RegExp(r'\D'), '');
       final email = _emailController.text.trim();
 
-      // 2. Check if user already exists
-      final userExists = await GraphQLService.checkUserExists(mobileNumber: mobile);
+      // 2. Check if user already exists (phoneExt required by API)
+      final phoneExt = _selectedCountry.phoneExt;
+      final userExists = await GraphQLService.checkUserExists(
+        phoneExt: phoneExt,
+        mobileNumber: mobile,
+      );
       if (userExists) {
         if (mounted) {
           LoadingOverlay.hide(context);
@@ -136,6 +143,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // 3. Prepare User Data (Do not create yet)
       final input = {
         'mobileNumber': mobile,
+        'phoneExt': phoneExt,
         if (email.isNotEmpty) 'email': email,
         'name': {
           'firstName': _firstNameController.text.trim(),
@@ -152,7 +160,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       };
 
       // 4. Request OTP
-      final otpResult = await GraphQLService.requestOtp(mobile, isRegister: true);
+      final otpResult = await GraphQLService.requestOtp(
+        mobile,
+        phoneExt: phoneExt,
+        isRegister: true,
+      );
 
       if (mounted) {
         LoadingOverlay.hide(context);
@@ -166,6 +178,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               builder: (context) => OtpScreen(
                 isRegistration: true,
                 mobileNumber: mobile,
+                phoneExt: phoneExt,
                 userData: input,
                 role: role,
               ),
@@ -306,6 +319,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       return 'Only alphabets are allowed';
                     }
                     return null;
+                  },
+                ),
+                const SizedBox(height: 24.0),
+                CustomDropdownField<CountryOption>(
+                  label: 'Country',
+                  hint: 'Select country',
+                  value: _selectedCountry,
+                  items: supportedCountries
+                      .map((c) => DropdownMenuItem<CountryOption>(
+                            value: c,
+                            child: Text(c.displayLabel),
+                          ))
+                      .toList(),
+                  onChanged: (v) {
+                    if (v != null) setState(() => _selectedCountry = v);
                   },
                 ),
                 const SizedBox(height: 24.0),
