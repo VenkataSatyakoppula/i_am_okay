@@ -6,11 +6,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import '../config.dart';
+import '../l10n/app_localizations.dart';
 import 'check_in_service.dart';
 import 'graphql_service.dart';
+
+const String _localeKey = 'app_locale';
 
 /// Called by the plugin when user taps a notification action while app is in background.
 @pragma('vm:entry-point')
@@ -215,6 +219,13 @@ class NotificationService {
     await scheduleDailyNotificationFromDate(scheduledDate);
   }
 
+  Future<AppLocalizations> _getLocalizations() async {
+    final prefs = await SharedPreferences.getInstance();
+    final code = prefs.getString(_localeKey);
+    final locale = (code == 'fr') ? const Locale('fr') : const Locale('en');
+    return lookupAppLocalizations(locale);
+  }
+
   Future<void> scheduleDailyNotificationFromDate(tz.TZDateTime startDate) async {
     // Always cancel existing notifications to ensure we don't have duplicates or stale times
     await cancelAllNotifications();
@@ -224,12 +235,13 @@ class NotificationService {
       await requestPermissions();
     }
 
+    final l10n = await _getLocalizations();
     // Schedule main notifications
-    await _scheduleNotifications(startDate, 0, 'daily_checkin', 'Daily Check-in', 'Time to check in! Are you okay?');
+    await _scheduleNotifications(startDate, 0, 'daily_checkin', l10n.notificationDailyCheckInTitle, l10n.notificationDailyCheckInBody);
     
     // Schedule follow-up reminders
     final reminderDate = startDate.add(const Duration(minutes: AppConfig.followUpReminderDelayMinutes));
-    await _scheduleNotifications(reminderDate, 100, 'checkin_reminder', 'Check-in Reminder', 'You haven\'t checked in yet. Is everything okay?');
+    await _scheduleNotifications(reminderDate, 100, 'checkin_reminder', l10n.notificationCheckInReminderTitle, l10n.notificationCheckInReminderBody);
 
     // Schedule emergency SMS tasks on the backend from startDate (e.g. when user sets/changes daily reminder time).
     try {
@@ -268,12 +280,12 @@ class NotificationService {
   }
 
   /// Alarm-style notification for daily check-in: full-screen intent, ringing alarm sound, strong vibration, Dismiss action.
-  static NotificationDetails _alarmNotificationDetails(String? alarmUri) {
+  static NotificationDetails _alarmNotificationDetails(String? alarmUri, AppLocalizations l10n) {
     return NotificationDetails(
       android: AndroidNotificationDetails(
         'daily_checkin_alarm_channel_v3',
-        'Daily Check-in Alarm',
-        channelDescription: 'Ringing alarm for daily check-in with sound and vibration',
+        l10n.notificationAlarmChannelName,
+        channelDescription: l10n.notificationAlarmChannelDesc,
         tag: _kAlarmNotificationTag,
         importance: Importance.max,
         priority: Priority.max,
@@ -300,12 +312,12 @@ class NotificationService {
     );
   }
 
-  static NotificationDetails _reminderNotificationDetails() {
-    return const NotificationDetails(
+  static NotificationDetails _reminderNotificationDetails(AppLocalizations l10n) {
+    return NotificationDetails(
       android: AndroidNotificationDetails(
         'daily_checkin_channel_v3',
-        'Daily Check-in',
-        channelDescription: 'Reminds you to check in daily',
+        l10n.notificationChannelName,
+        channelDescription: l10n.notificationChannelDesc,
         importance: Importance.max,
         priority: Priority.high,
       ),
@@ -319,6 +331,7 @@ class NotificationService {
 
   Future<void> _scheduleNotifications(tz.TZDateTime startDate, int startId, String type, String title, String body) async {
     try {
+      final l10n = await _getLocalizations();
       // Fetch system alarm URI once (Android) for ringing alarm sound
       if ((type == 'daily_checkin' || type == 'checkin_reminder') &&
           Platform.isAndroid &&
@@ -332,8 +345,8 @@ class NotificationService {
         }
       }
       final notificationDetails = (type == 'daily_checkin' || type == 'checkin_reminder')
-          ? _alarmNotificationDetails(_cachedAlarmUri)
-          : _reminderNotificationDetails();
+          ? _alarmNotificationDetails(_cachedAlarmUri, l10n)
+          : _reminderNotificationDetails(l10n);
 
       for (int i = 0; i < _scheduleDaysAhead; i++) {
         final tz.TZDateTime notificationDate = startDate.add(Duration(days: i));
@@ -420,10 +433,11 @@ class NotificationService {
     }
 
     if (inPreReminderWindow) {
+      final l10n = await _getLocalizations();
       // Reschedule daily_checkin and checkin_reminder from tomorrow.
       final reminderDate = tomorrowCheckIn.add(const Duration(minutes: AppConfig.followUpReminderDelayMinutes));
-      await _scheduleNotifications(tomorrowCheckIn, 0, 'daily_checkin', 'Daily Check-in', 'Time to check in! Are you okay?');
-      await _scheduleNotifications(reminderDate, 100, 'checkin_reminder', 'Check-in Reminder', 'You haven\'t checked in yet. Is everything okay?');
+      await _scheduleNotifications(tomorrowCheckIn, 0, 'daily_checkin', l10n.notificationDailyCheckInTitle, l10n.notificationDailyCheckInBody);
+      await _scheduleNotifications(reminderDate, 100, 'checkin_reminder', l10n.notificationCheckInReminderTitle, l10n.notificationCheckInReminderBody);
     }
     // 11:05–11:10 or after: only emergencySMS was cleared/rescheduled above; do not touch local notifications.
   }

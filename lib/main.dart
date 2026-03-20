@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:IamOkay/l10n/app_localizations.dart';
 import 'screens/home_screen.dart';
 import 'screens/landing_screen.dart';
+import 'screens/language_selection_screen.dart';
 import 'services/check_in_service.dart';
 import 'services/notification_service.dart';
+import 'providers/locale_provider.dart';
 
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
@@ -13,16 +17,20 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   NotificationService.onCheckInFromDismiss = (bool success) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      rootScaffoldMessengerKey.currentState?.showSnackBar(
-        SnackBar(
-          content: Text(
-            success
-                ? 'Check-in successful! You are okay!'
-                : 'Check-in failed. Please try again from the app.',
-          ),
-          backgroundColor: success ? Colors.green : Colors.red,
-        ),
-      );
+      final context = rootNavigatorKey.currentContext;
+      if (context != null && context.mounted) {
+        final l10n = AppLocalizations.of(context);
+        if (l10n != null) {
+          rootScaffoldMessengerKey.currentState?.showSnackBar(
+            SnackBar(
+              content: Text(
+                success ? l10n.checkInSuccessful : l10n.checkInFailedFromNotification,
+              ),
+              backgroundColor: success ? Colors.green : Colors.red,
+            ),
+          );
+        }
+      }
     });
   };
   NotificationService.onOpenAppFromNotification = () {
@@ -75,7 +83,12 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => LocaleProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -83,11 +96,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localeProvider = context.watch<LocaleProvider>();
     return MaterialApp(
       navigatorKey: rootNavigatorKey,
       scaffoldMessengerKey: rootScaffoldMessengerKey,
       title: 'IAmOkay',
       debugShowCheckedModeBanner: false,
+      locale: localeProvider.locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       theme: ThemeData(
         scaffoldBackgroundColor: const Color(0xFFFFFFFF), // White
         colorScheme: ColorScheme.fromSeed(
@@ -139,7 +156,22 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const LandingScreen(),
+      home: Consumer<LocaleProvider>(
+        builder: (context, localeProvider, _) {
+          if (!localeProvider.isLoaded) {
+            return const Scaffold(
+              backgroundColor: Color(0xFFFFFFFF),
+              body: Center(
+                child: CircularProgressIndicator(color: Color(0xFF1F4ED8)),
+              ),
+            );
+          }
+          if (localeProvider.hasSelectedLanguage) {
+            return const LandingScreen();
+          }
+          return const LanguageSelectionScreen();
+        },
+      ),
     );
   }
 }

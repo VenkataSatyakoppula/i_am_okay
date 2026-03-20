@@ -14,9 +14,9 @@ class PhoneInputFormatter extends TextInputFormatter {
     // Filter out non-digits
     final digitsOnly = newValue.text.replaceAll(RegExp(r'\D'), '');
     
-    // Limit to 10 digits
-    final truncated = digitsOnly.length > 10 
-        ? digitsOnly.substring(0, 10) 
+    // Limit to 12 digits (8-12 range for international numbers)
+    final truncated = digitsOnly.length > 12 
+        ? digitsOnly.substring(0, 12) 
         : digitsOnly;
 
     final buffer = StringBuffer();

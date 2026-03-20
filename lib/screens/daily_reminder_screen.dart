@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:IamOkay/l10n/app_localizations.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/loading_overlay.dart';
 import '../services/graphql_service.dart';
 import '../services/notification_service.dart';
+import '../utils/api_error_handler.dart';
 import 'permission_screen.dart';
 
 class DailyReminderScreen extends StatefulWidget {
@@ -65,7 +67,7 @@ class _DailyReminderScreenState extends State<DailyReminderScreen> {
         }
       }
     } catch (e) {
-      // Error fetching reminder settings
+      if (mounted) await ApiErrorHandler.handle(context, e);
     } finally {
       if (mounted) {
         setState(() {
@@ -78,8 +80,8 @@ class _DailyReminderScreenState extends State<DailyReminderScreen> {
   Future<void> _handleSetReminder() async {
     if (_selectedTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a time first'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.pleaseSelectTimeFirst),
           backgroundColor: Colors.red,
         ),
       );
@@ -123,8 +125,8 @@ class _DailyReminderScreenState extends State<DailyReminderScreen> {
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Reminder time updated successfully!'),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.reminderTimeUpdated),
               backgroundColor: Colors.green,
             ),
           );
@@ -134,12 +136,7 @@ class _DailyReminderScreenState extends State<DailyReminderScreen> {
     } catch (e) {
       if (mounted) {
         LoadingOverlay.hide(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Something went wrong. Please try again.'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        await ApiErrorHandler.handle(context, e);
       }
     }
   }
@@ -197,8 +194,8 @@ class _DailyReminderScreenState extends State<DailyReminderScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-              const Text(
-                'Set a time for your daily safety check-in.',
+              Text(
+                AppLocalizations.of(context)!.setTimeForDailyCheckIn,
                 style: TextStyle(
                   fontSize: 18.0,
                   color: Color(0xFF333333),
@@ -240,7 +237,7 @@ class _DailyReminderScreenState extends State<DailyReminderScreen> {
               ),
               const Spacer(),
               CustomButton(
-                text: widget.isOnboarding ? 'Set Reminder' : 'Update Reminder',
+                text: widget.isOnboarding ? AppLocalizations.of(context)!.setReminder : AppLocalizations.of(context)!.updateReminder,
                 onPressed: _handleSetReminder,
               ),
                     const SizedBox(height: 24),

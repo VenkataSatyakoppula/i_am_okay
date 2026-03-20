@@ -1,0 +1,335 @@
+{
+  "@@locale": "en",
+  "appTitle": "IAmOkay",
+  "languageEnglish": "English",
+  "languageFrench": "Français",
+  "welcomeMessage": "Welcome to your personal safety companion.",
+  "getStarted": "Get Started",
+  "iAlreadyHaveAccount": "I already have an account",
+  "poweredBy": "Powered by",
+  "home": "Home",
+  "history": "History",
+  "contacts": "Contacts",
+  "settings": "Settings",
+  "howAreYouFeelingToday": "How are you feeling today?",
+  "iAmOkay": "I am Okay",
+  "setDailyReminder": "Set a Daily Reminder",
+  "setDailyReminderToCheckIn": "Set a daily reminder to check in",
+  "youHaveCheckedInForToday": "You have checked in for Today!",
+  "nextReminderIn": "Next reminder in",
+  "nextReminderTomorrowAt": "Next reminder tomorrow at",
+  "pauseReminder": "Pause Reminder",
+  "resumeReminder": "Resume Reminder",
+  "resumeReminderConfirm": "Resume Reminder?",
+  "wouldYouLikeToStartReminders": "Would you like to start receiving daily reminders again?",
+  "yesResume": "Yes, Resume",
+  "no": "No",
+  "cancel": "Cancel",
+  "custom": "Custom",
+  "hours24": "24 hours",
+  "days2": "2 days",
+  "week1": "1 week",
+  "dailyCheckInAt": "Daily check-in at",
+  "reminderPausedUntil": "Reminder paused until",
+  "reminderResumed": "Reminder resumed",
+  "checkInSuccessful": "Check-in successful! You are okay!",
+  "checkInFailed": "Failed to check in. Please try again.",
+  "checkInFailedFromNotification": "Check-in failed. Please try again from the app.",
+  "emergencyContacts": "Emergency Contacts",
+  "addUpTo3Contacts": "Add up to 3 emergency contacts ({count}/3)",
+  "@addUpTo3Contacts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "refresh": "Refresh",
+  "readyToReceiveAlerts": "Ready to receive alerts",
+  "waitingForConfirmation": "Waiting for confirmation",
+  "editProfile": "Edit Profile",
+  "dailyReminder": "Daily Reminder",
+  "privacyPolicy": "Privacy Policy",
+  "aboutUs": "About Us",
+  "support": "Support",
+  "biometric": "Biometric",
+  "permissions": "Permissions",
+  "logOut": "Log Out",
+  "goToLogin": "Go to Login",
+  "contactDashboard": "Contact Dashboard",
+  "emergencyContactFor": "Emergency Contact For",
+  "historyOf": "{name}'s History",
+  "@historyOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "somethingWentWrong": "Something went wrong. Please try again.",
+  "pleaseCheckConnection": "Please check your internet connection and try again.",
+  "connectionIssue": "Connection issue",
+  "logoutAndSignInAgain": "We're having trouble connecting. Please log out and log in again to continue.",
+  "logoutAndSignInButton": "Log out and sign in again",
+  "userInformation": "User Information",
+  "actions": "Actions",
+  "failedToLoadProfile": "Failed to load profile. You may be offline.",
+  "pleaseSelectState": "Please select a state",
+  "profileUpdatedSuccessfully": "Profile updated successfully!",
+  "reminderTimeUpdated": "Reminder time updated successfully!",
+  "pleaseSelectTimeFirst": "Please select a time first",
+  "errorLoadingHistory": "Error loading history",
+  "navigate": "Navigate",
+  "hiName": "Hi, {name}",
+  "@hiName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "firstName": "First Name",
+  "lastName": "Last Name",
+  "aliasName": "Alias Name",
+  "country": "Country",
+  "mobileNumber": "Mobile Number",
+  "addressLine1": "Address Line 1",
+  "addressLine2": "Address Line 2",
+  "city": "City",
+  "zipCode": "Zip Code",
+  "state": "State",
+  "email": "Email",
+  "hintFirstName": "Enter your first name",
+  "hintLastName": "Enter your last name",
+  "hintAliasName": "Enter your alias name",
+  "hintSelectCountry": "Select country",
+  "hintMobileNumber": "Enter your mobile number",
+  "hintAddressLine1": "Street address, P.O. box, etc.",
+  "hintAddressLine2": "Apartment, suite, unit, etc.",
+  "hintCity": "Enter your city",
+  "hintZipCode": "Zip Code",
+  "hintSelectState": "Select State",
+  "hintEmail": "Enter your email address",
+  "hintFullName": "Enter full name",
+  "hintPhoneNumber": "Enter phone number",
+  "hintContactEmail": "Enter email address",
+  "hintOtpCode": "Enter the 6-digit code",
+  "hintSelectRelation": "Select relation",
+  "validationFirstNameRequired": "First name is required",
+  "validationLastNameRequired": "Last name is required",
+  "validationOnlyAlphabets": "Only alphabets are allowed",
+  "validationMobileRequired": "Mobile number is required",
+  "validationMobile10Digits": "Enter a valid mobile number (8-12 digits)",
+  "validationAddressRequired": "Address Line 1 is required",
+  "validationCityRequired": "City is required",
+  "validationZipRequired": "Zip Code is required",
+  "validationZip5Digits": "Enter a valid 5-digit Zip Code",
+  "validationEmailInvalid": "Enter a valid email address",
+  "validationPleaseEnterMobile": "Please enter mobile number",
+  "validationPleaseEnterMobile10": "Please enter a valid number (8-12 digits)",
+  "validationNameRequired": "Name is required",
+  "pleaseSelectRelation": "Please select a relation",
+  "validationPhoneRequired": "Phone number is required",
+  "validationPhone10Digits": "Enter a valid phone number (8-12 digits)",
+  "register": "Register",
+  "signIn": "Sign In",
+  "saveChanges": "Save Changes",
+  "welcome": "Welcome",
+  "welcomeBack": "Welcome Back",
+  "signInToContinue": "Sign in to continue to your account",
+  "dontHaveAccount": "Don't have an account? ",
+  "loginWithBiometrics": "Login with Biometrics",
+  "tapToUseBiometrics": "Tap to use Biometrics",
+  "otpSentMessage": "We have sent a one-time password to your mobile number.",
+  "otpCode": "OTP Code",
+  "verifyAndLogin": "Verify & Login",
+  "resendCode": "Resend Code",
+  "resendCodeIn": "Resend Code in {seconds}s",
+  "@resendCodeIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "editContact": "Edit Contact",
+  "addNewContact": "Add New Contact",
+  "relation": "Relation",
+  "fullName": "Full Name",
+  "phoneNumber": "Phone Number",
+  "sendAlertsVia": "Send alerts via",
+  "sms": "SMS",
+  "whatsApp": "WhatsApp",
+  "consentDisclaimer": "By adding this contact, you confirm they have agreed to receive automated emergency alerts from IamOkay.\n\nMessage frequency varies. Message & data rates may apply.\n\nReply STOP to opt out. Reply HELP for help.",
+  "consentDisclaimerBase": "By adding this contact, you confirm they have agreed to receive automated emergency alerts from IamOkay.",
+  "consentDisclaimerSmsRates": "Message frequency varies. Message & data rates may apply.\n\nReply STOP to opt out. Reply HELP for help.",
+  "consentCheckbox": "I confirm this contact has consented to receive SMS alerts from IamOkay.",
+  "consentCheckboxSms": "I confirm this contact has consented to receive SMS alerts from IamOkay.",
+  "consentCheckboxWhatsApp": "I confirm this contact has consented to receive WhatsApp alerts from IamOkay.",
+  "phoneCannotChange": "Phone number cannot be changed for verified contacts.",
+  "updateContact": "Update Contact",
+  "addContact": "Add Contact",
+  "addAnotherContact": "Add Another Contact",
+  "next": "Next",
+  "pleaseConfirmConsent": "Please confirm that the contact has consented to receive alerts.",
+  "relationParent": "Parent",
+  "relationSpouse": "Spouse",
+  "relationChild": "Child",
+  "relationSibling": "Sibling",
+  "relationFriend": "Friend",
+  "relationPartner": "Partner",
+  "relationOther": "Other",
+  "userNotFoundPleaseLogin": "User not found locally. Please login again.",
+  "goToLogin": "Go to Login",
+  "address": "Address",
+  "user": "User",
+  "setTimeForDailyCheckIn": "Set a time for your daily safety check-in.",
+  "selectTime": "Select Time",
+  "setReminder": "Set Reminder",
+  "updateReminder": "Update Reminder",
+  "permissionsRequired": "Permissions Required",
+  "permissionsRequiredDescription": "To ensure your safety and provide the best experience, we need access to the following permissions:",
+  "notifications": "Notifications",
+  "notificationsDescription": "To remind you to check in daily and ensure you are okay.",
+  "locationOptional": "Location (Optional)",
+  "locationDescription": "To include your current location in emergency alerts sent to your contacts.",
+  "alarms": "Alarms",
+  "alarmsDescription": "To schedule precise reminders and safety checks.",
+  "fullScreenIntent": "Full-screen intent",
+  "fullScreenIntentDescription": "To open the app when the alarm rings on the lock screen. Tap to enable in Settings.",
+  "grantPermissions": "Grant Permissions",
+  "continueButton": "Continue",
+  "enablePermissionsLater": "You can enable permissions later in Settings if needed.",
+  "authenticateToEnableBiometric": "Please authenticate to enable biometric login",
+  "biometricAuthFailed": "Biometric authentication failed. Please try again.",
+  "enableBiometricLogin": "Enable Biometric Login",
+  "biometricLoginDescription": "Log in faster and more securely with your fingerprint or face.",
+  "biometricsNotAvailable": "Biometrics not available on this device.",
+  "skipForNow": "Skip for Now",
+  "ourMission": "Our Mission",
+  "aboutUsMission": "IamOkay is dedicated to keeping you connected with the people who care about you. We help users stay safe by enabling simple daily check-ins and automated emergency alerts to designated contacts when needed.",
+  "howItWorks": "How It Works",
+  "aboutUsHowItWorks": "Set a daily reminder time that works for you. Check in when prompted to let your emergency contacts know you're okay. If you miss a check-in, your contacts can be notified so they can reach out and ensure your wellbeing.",
+  "features": "Features",
+  "aboutUsFeatures": "• Daily check-in reminders\n• Up to 3 emergency contacts\n• Optional location sharing for alerts\n• Pause reminders when needed\n• Simple, privacy-focused design",
+  "version": "Version",
+  "appVersion": "IamOkay v1.0.0",
+  "contactUs": "Contact Us",
+  "supportContactText": "Email: support@iamokay.app\nWe typically respond within 24–48 hours.",
+  "faq": "Frequently Asked Questions",
+  "faqAddContactQuestion": "How do I add an emergency contact?",
+  "faqAddContactAnswer": "Go to the Contacts tab, tap Add Contact, and enter their name, relation, and phone number. You can add up to 3 emergency contacts.",
+  "faqMissCheckInQuestion": "What happens if I miss a check-in?",
+  "faqMissCheckInAnswer": "If you don't check in by your reminder time, your emergency contacts may receive an alert so they can reach out to you.",
+  "faqPauseRemindersQuestion": "Can I pause my reminders?",
+  "faqPauseRemindersAnswer": "Yes. On the Home screen, use \"Pause Reminder\" to temporarily stop check-in reminders for 24 hours, 2 days, 1 week, or a custom date.",
+  "faqLocationQuestion": "Is my location shared?",
+  "faqLocationAnswer": "Location is only included in emergency alerts if you have granted location permission and it is enabled in your settings.",
+  "resources": "Resources",
+  "supportResources": "• Privacy Policy (see Settings)\n• App version and updates via your device's store",
+  "soon": "soon",
+  "daysCount": "{count} days",
+  "@daysCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "oneDay": "1 day",
+  "hoursCount": "{count} hours",
+  "@hoursCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "oneHour": "1 hour",
+  "minutesCount": "{count} minutes",
+  "@minutesCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "lessThanAMinute": "less than a minute",
+  "nextReminderTomorrowAtTime": "Next reminder tomorrow at {time}",
+  "@nextReminderTomorrowAtTime": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "nextReminderInHms": "Next reminder in {hours}h {minutes}m {seconds}s",
+  "@nextReminderInHms": {
+    "placeholders": {
+      "hours": {"type": "int"},
+      "minutes": {"type": "int"},
+      "seconds": {"type": "int"}
+    }
+  },
+  "nextReminderInMs": "Next reminder in {minutes}m {seconds}s",
+  "@nextReminderInMs": {
+    "placeholders": {
+      "minutes": {"type": "int"},
+      "seconds": {"type": "int"}
+    }
+  },
+  "nextReminderInS": "Next reminder in {seconds}s",
+  "@nextReminderInS": {
+    "placeholders": {
+      "seconds": {"type": "int"}
+    }
+  },
+  "reminderPausedUntilDate": "Reminder paused until {date}",
+  "@reminderPausedUntilDate": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "paused": "Paused",
+  "resumesIn": "Resumes in {time}",
+  "@resumesIn": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "notificationDailyCheckInTitle": "Daily Check-in",
+  "notificationDailyCheckInBody": "Time to check in! Are you okay?",
+  "notificationCheckInReminderTitle": "Check-in Reminder",
+  "notificationCheckInReminderBody": "You haven't checked in yet. Is everything okay?",
+  "notificationAlarmChannelName": "Daily Check-in Alarm",
+  "notificationAlarmChannelDesc": "Ringing alarm for daily check-in with sound and vibration",
+  "notificationChannelName": "Daily Check-in",
+  "notificationChannelDesc": "Reminds you to check in daily",
+  "userNotIdentifiedPleaseLogin": "User not identified. Please log in again.",
+  "retry": "Retry",
+  "noHistoryAvailableYet": "No history available yet.",
+  "locationAvailable": "Location available",
+  "locationNotAvailable": "Location not available",
+  "checkInDetails": "Check-in Details",
+  "statusLabel": "Status: {status}",
+  "@statusLabel": {
+    "placeholders": {
+      "status": {"type": "String"}
+    }
+  },
+  "dateLabel": "Date: {date}",
+  "@dateLabel": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "timeLabel": "Time: {time}",
+  "@timeLabel": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "dateAtTime": "{date} at {time}",
+  "@dateAtTime": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "time": {"type": "String"}
+    }
+  },
+  "close": "Close",
+  "couldNotOpenMaps": "Could not open maps application",
+  "selectLanguage": "Select your language",
+  "selectLanguageDescription": "Choose your preferred language for the app"
+}

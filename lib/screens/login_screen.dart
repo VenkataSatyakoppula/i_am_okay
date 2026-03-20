@@ -1,9 +1,9 @@
 import 'package:IamOkay/screens/landing_screen.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:IamOkay/l10n/app_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../config.dart';
 import '../constants/countries.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
@@ -15,7 +15,6 @@ import '../utils/phone_input_formatter.dart';
 import 'register_screen.dart';
 import 'otp_screen.dart';
 import 'permission_screen.dart';
-import 'home_screen.dart';
 import 'emergency_contact_dashboard.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -90,23 +89,23 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_canUseBiometric) return;
 
     final authenticated = await BiometricService.authenticate();
-    if (authenticated && mounted) {
-      final userRole = await _storage.read(key: 'user_role');
-      if (userRole == 'contact') {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const EmergencyContactDashboard(),
-          ),
-          (route) => false,
-        );
-      } else {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const PermissionScreen()),
-          (route) => false,
-        );
-      }
+    if (!authenticated || !mounted) return;
+    final userRole = await _storage.read(key: 'user_role');
+    if (!mounted) return;
+    if (userRole == 'contact') {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const EmergencyContactDashboard(),
+        ),
+        (route) => false,
+      );
+    } else {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const PermissionScreen()),
+        (route) => false,
+      );
     }
   }
 
@@ -242,7 +241,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildFormContent() {
-    final column = Column(
+    return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -259,30 +258,46 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 16),
         Center(
-          child: Text(
-            widget.fromRegistration ? 'Welcome' : 'Welcome Back',
-            style: const TextStyle(
-              fontSize: 28.0,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF000000),
-            ),
+          child: Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context);
+              return Text(
+                widget.fromRegistration
+                    ? (l10n?.welcome ?? 'Welcome')
+                    : (l10n?.welcomeBack ?? 'Welcome Back'),
+                style: const TextStyle(
+                  fontSize: 28.0,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF000000),
+                ),
+              );
+            },
           ),
         ),
         const SizedBox(height: 8),
-        const Center(
-          child: Text(
-            'Sign in to continue to your account',
-            style: TextStyle(
-              fontSize: 18.0,
-              fontWeight: FontWeight.w400,
-              color: Color(0xFF333333),
+        Center(
+          child: Builder(
+            builder: (context) => Text(
+              AppLocalizations.of(context)?.signInToContinue ?? 'Sign in to continue to your account',
+              style: const TextStyle(
+                fontSize: 18.0,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF333333),
+              ),
             ),
           ),
         ),
         const SizedBox(height: 48),
+        Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
         CustomDropdownField<CountryOption>(
-          label: 'Country',
-          hint: 'Select country',
+          label: l10n.country,
+          hint: l10n.hintSelectCountry,
           value: _selectedCountry,
           items: supportedCountries
               .map((c) => DropdownMenuItem<CountryOption>(
@@ -296,8 +311,8 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 24),
         CustomTextField(
-          label: 'Mobile Number',
-          hint: 'Enter your mobile number',
+          label: l10n.mobileNumber,
+          hint: l10n.hintMobileNumber,
           keyboardType: TextInputType.phone,
           controller: _mobileController,
           inputFormatters: [PhoneInputFormatter()],
@@ -308,76 +323,91 @@ class _LoginScreenState extends State<LoginScreen> {
               : null,
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Please enter mobile number';
+              return l10n.validationPleaseEnterMobile;
             }
             final digits = value.replaceAll(RegExp(r'\D'), '');
-            if (digits.length != 10) {
-              return 'Please enter a valid 10-digit number';
+            if (digits.length < 8 || digits.length > 12) {
+              return l10n.validationPleaseEnterMobile10;
             }
             return null;
           },
         ),
         const SizedBox(height: 32),
         CustomButton(
-          text: 'Sign In',
+          text: l10n.signIn,
           onPressed: _handleLogin,
         ),
         if (_canUseBiometric && _mobileController.text.isNotEmpty) ...[
           const SizedBox(height: 24),
           Center(
-            child: IconButton(
-              iconSize: 48,
-              icon: const Icon(
-                Icons.fingerprint,
-                color: Color(0xFF1F4ED8),
-              ),
-              onPressed: _attemptBiometric,
-              tooltip: 'Login with Biometrics',
+            child: Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context);
+                return IconButton(
+                  iconSize: 48,
+                  icon: const Icon(
+                    Icons.fingerprint,
+                    color: Color(0xFF1F4ED8),
+                  ),
+                  onPressed: _attemptBiometric,
+                  tooltip: l10n?.loginWithBiometrics ?? 'Login with Biometrics',
+                );
+              },
             ),
           ),
           const SizedBox(height: 8),
-          const Center(
-            child: Text(
-              'Tap to use Biometrics',
-              style: TextStyle(
-                fontSize: 14,
-                color: Color(0xFF666666),
+          Center(
+            child: Builder(
+              builder: (context) => Text(
+                AppLocalizations.of(context)?.tapToUseBiometrics ?? 'Tap to use Biometrics',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF666666),
+                ),
               ),
             ),
           ),
         ],
         const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              "Don't have an account? ",
-              style: TextStyle(
-                fontSize: 16.0,
-                color: Color(0xFF333333),
-              ),
-            ),
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const RegisterScreen()),
-                );
-              },
-              child: const Text(
-                'Register',
-                style: TextStyle(
-                  fontSize: 16.0,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1F4ED8),
+        Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context);
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  l10n?.dontHaveAccount ?? "Don't have an account? ",
+                  style: const TextStyle(
+                    fontSize: 16.0,
+                    color: Color(0xFF333333),
+                  ),
                 ),
-              ),
-            ),
-          ],
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                    );
+                  },
+                  child: Text(
+                    l10n?.register ?? 'Register',
+                    style: const TextStyle(
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1F4ED8),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
         if (Platform.isIOS) const SizedBox(height: 32) else const SizedBox(height: 48),
+              ],
+            );
+          },
+        ),
       ],
     );
-    return column;
   }
 }

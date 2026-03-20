@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:IamOkay/l10n/app_localizations.dart';
 import 'package:IamOkay/screens/emergency_contact_dashboard.dart';
 import 'package:IamOkay/screens/home_screen.dart';
 import 'package:IamOkay/widgets/custom_button.dart';
@@ -49,7 +50,7 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
     bool authenticated = false;
     try {
       authenticated = await localAuth.authenticate(
-        localizedReason: 'Please authenticate to enable biometric login',
+        localizedReason: AppLocalizations.of(context)!.authenticateToEnableBiometric,
       );
     } catch (e) {
       // Handle error
@@ -66,8 +67,8 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
       // Optionally, show a message that authentication failed
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Biometric authentication failed. Please try again.'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.biometricAuthFailed),
             backgroundColor: Colors.red,
           ),
         );
@@ -139,8 +140,8 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
                 color: Color(0xFF1F4ED8),
               ),
               const SizedBox(height: 24),
-              const Text(
-                'Enable Biometric Login',
+              Text(
+                AppLocalizations.of(context)!.enableBiometricLogin,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 24.0,
@@ -159,20 +160,20 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
               const Spacer(),
               if (_isBiometricAvailable)
                 CustomButton(
-                  text: 'Enable Biometric Login',
+                  text: AppLocalizations.of(context)!.enableBiometricLogin,
                   onPressed: _handleEnableBiometric,
                 )
               else
-                const Text(
-                  'Biometrics not available on this device.',
+                Text(
+                  AppLocalizations.of(context)!.biometricsNotAvailable,
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.red),
                 ),
               const SizedBox(height: 16),
               TextButton(
                 onPressed: _skipBiometric,
-                child: const Text(
-                  'Skip for Now',
+                child: Text(
+                  AppLocalizations.of(context)!.skipForNow,
                   style: TextStyle(
                     color: Color(0xFF1F4ED8),
                     fontSize: 16,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:IamOkay/l10n/app_localizations.dart';
 
 class AboutUsScreen extends StatelessWidget {
   const AboutUsScreen({super.key});
@@ -7,8 +8,8 @@ class AboutUsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'About Us',
+        title: Text(
+          AppLocalizations.of(context)!.aboutUs,
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         backgroundColor: const Color(0xFF1F4ED8),
@@ -20,35 +21,31 @@ class AboutUsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _SectionHeading(title: 'Our Mission'),
+            _SectionHeading(title: AppLocalizations.of(context)!.ourMission),
             const SizedBox(height: 8),
-            const Text(
-              'IamOkay is dedicated to keeping you connected with the people who care about you. We help users stay safe by enabling simple daily check-ins and automated emergency alerts to designated contacts when needed.',
+            Text(
+              AppLocalizations.of(context)!.aboutUsMission,
               style: TextStyle(fontSize: 16.0, height: 1.5, color: Color(0xFF333333)),
             ),
             const SizedBox(height: 24),
-            _SectionHeading(title: 'How It Works'),
+            _SectionHeading(title: AppLocalizations.of(context)!.howItWorks),
             const SizedBox(height: 8),
-            const Text(
-              'Set a daily reminder time that works for you. Check in when prompted to let your emergency contacts know you\'re okay. If you miss a check-in, your contacts can be notified so they can reach out and ensure your wellbeing.',
+            Text(
+              AppLocalizations.of(context)!.aboutUsHowItWorks,
               style: TextStyle(fontSize: 16.0, height: 1.5, color: Color(0xFF333333)),
             ),
             const SizedBox(height: 24),
-            _SectionHeading(title: 'Features'),
+            _SectionHeading(title: AppLocalizations.of(context)!.features),
             const SizedBox(height: 8),
-            const Text(
-              '• Daily check-in reminders\n'
-              '• Up to 3 emergency contacts\n'
-              '• Optional location sharing for alerts\n'
-              '• Pause reminders when needed\n'
-              '• Simple, privacy-focused design',
+            Text(
+              AppLocalizations.of(context)!.aboutUsFeatures,
               style: TextStyle(fontSize: 16.0, height: 1.6, color: Color(0xFF333333)),
             ),
             const SizedBox(height: 24),
-            _SectionHeading(title: 'Version'),
+            _SectionHeading(title: AppLocalizations.of(context)!.version),
             const SizedBox(height: 8),
-            const Text(
-              'IamOkay v1.0.0',
+            Text(
+              AppLocalizations.of(context)!.appVersion,
               style: TextStyle(fontSize: 16.0, color: Color(0xFF666666)),
             ),
           ],

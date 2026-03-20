@@ -27,6 +27,8 @@ const String userFragment = """
       smsOptIn
       smsEnabled
       whatsAppEnabled
+      sendViaSms
+      sendViaWhatsApp
     }
     reminderSettings {
       checkInTime

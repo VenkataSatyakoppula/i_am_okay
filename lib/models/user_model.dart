@@ -172,6 +172,10 @@ class EmergencyContact {
   final bool? smsOptIn;
   final bool? smsEnabled;
   final bool? whatsAppEnabled;
+  /// User's choice: send via SMS. Null for legacy contacts (treat as true).
+  final bool? sendViaSms;
+  /// User's choice: send via WhatsApp. Null for legacy contacts (treat as true).
+  final bool? sendViaWhatsApp;
 
   EmergencyContact({
     this.name,
@@ -182,6 +186,8 @@ class EmergencyContact {
     this.smsOptIn,
     this.smsEnabled,
     this.whatsAppEnabled,
+    this.sendViaSms,
+    this.sendViaWhatsApp,
   });
 
   factory EmergencyContact.fromJson(Map<String, dynamic> json) {
@@ -194,6 +200,8 @@ class EmergencyContact {
       smsOptIn: json['smsOptIn'] as bool?,
       smsEnabled: json['smsEnabled'] as bool?,
       whatsAppEnabled: json['whatsAppEnabled'] as bool?,
+      sendViaSms: json['sendViaSms'] as bool?,
+      sendViaWhatsApp: json['sendViaWhatsApp'] as bool?,
     );
   }
 
@@ -207,6 +215,8 @@ class EmergencyContact {
       'smsOptIn': smsOptIn,
       'smsEnabled': smsEnabled,
       'whatsAppEnabled': whatsAppEnabled,
+      'sendViaSms': sendViaSms,
+      'sendViaWhatsApp': sendViaWhatsApp,
     };
   }
 }

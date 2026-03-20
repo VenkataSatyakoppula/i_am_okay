@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:IamOkay/l10n/app_localizations.dart';
 import '../widgets/custom_button.dart';
 import '../services/graphql_service.dart';
 import '../services/notification_service.dart';
 import '../models/user_model.dart';
+import '../utils/api_error_handler.dart';
 import '../utils/phone_display_helper.dart';
 import 'landing_screen.dart';
 import 'about_us_screen.dart';
@@ -50,7 +52,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = _user == null ? "User not found locally. Please login again." : null;
+          _errorMessage = _user == null ? AppLocalizations.of(context)!.userNotFoundPleaseLogin : null;
         });
       }
       return;
@@ -73,7 +75,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         });
       }
     } catch (e) {
-      // Failed to fetch full profile
+      if (mounted) await ApiErrorHandler.handle(context, e);
     }
   }
 
@@ -107,13 +109,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: const TextStyle(color: Colors.red),
               ),
               const SizedBox(height: 16),
-              if (_errorMessage!.contains("login again"))
+              if (_errorMessage != null)
                 ElevatedButton(
                   onPressed: _logout,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1F4ED8),
                   ),
-                  child: const Text('Go to Login'),
+                  child: Text(AppLocalizations.of(context)!.goToLogin),
                 ),
             ],
           ),
@@ -126,10 +128,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text("Failed to load profile. You may be offline."),
+            Text(AppLocalizations.of(context)!.failedToLoadProfile),
             const SizedBox(height: 24),
             CustomButton(
-              text: 'Log Out',
+              text: AppLocalizations.of(context)!.logOut,
               onPressed: _logout,
               backgroundColor: Colors.red,
             ),
@@ -143,13 +145,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       children: [
         _buildProfileHeader(),
         const SizedBox(height: 20),
-        _buildSectionTitle("User Information"),
+        _buildSectionTitle(AppLocalizations.of(context)!.userInformation),
         _buildInfoCard(),
         const SizedBox(height: 20),
-        _buildSectionTitle("Settings"),
+        _buildSectionTitle(AppLocalizations.of(context)!.settings),
         _buildSettingsCard(),
         const SizedBox(height: 20),
-        _buildSectionTitle("Actions"),
+        _buildSectionTitle(AppLocalizations.of(context)!.actions),
         _buildActionsCard(),
       ],
     );
@@ -158,7 +160,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildProfileHeader() {
     final fullName =
         "${_user?.name?.firstName ?? ''} ${_user?.name?.lastName ?? ''}".trim();
-    final displayName = fullName.isNotEmpty ? fullName : "User";
+    final displayName = fullName.isNotEmpty ? fullName : AppLocalizations.of(context)!.user;
     final alias = _user?.name?.alias?.trim();
     final hasAlias = alias != null && alias.isNotEmpty;
 
@@ -245,18 +247,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
           if (_user?.email != null && _user!.email!.isNotEmpty)
             _buildProfileOption(
               icon: Icons.email_outlined,
-              title: "Email",
+              title: AppLocalizations.of(context)!.email,
               subtitle: _user!.email!,
             ),
           if (addressStr.isNotEmpty)
             _buildProfileOption(
               icon: Icons.location_on_outlined,
-              title: "Address",
+              title: AppLocalizations.of(context)!.address,
               subtitle: addressStr,
             ),
           _buildProfileOption(
             icon: Icons.edit,
-            title: "Edit Profile",
+            title: AppLocalizations.of(context)!.editProfile,
             onTap: () async {
               final result = await Navigator.push(
                 context,
@@ -284,7 +286,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           _buildProfileOption(
             icon: Icons.timer_outlined,
-            title: "Daily Reminder",
+            title: AppLocalizations.of(context)!.dailyReminder,
             onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -293,7 +295,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           _buildProfileOption(
             icon: Icons.notifications_active_outlined,
-            title: "Permissions",
+            title: AppLocalizations.of(context)!.permissions,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
@@ -303,7 +305,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           _buildProfileOption(
             icon: Icons.fingerprint,
-            title: "Biometric",
+            title: AppLocalizations.of(context)!.biometric,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
@@ -326,21 +328,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           _buildProfileOption(
             icon: Icons.info_outline,
-            title: "About Us",
+            title: AppLocalizations.of(context)!.aboutUs,
             onTap: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const AboutUsScreen())),
           ),
           const Divider(height: 1, indent: 16, endIndent: 16),
           _buildProfileOption(
             icon: Icons.support_agent,
-            title: "Support",
+            title: AppLocalizations.of(context)!.support,
             onTap: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const SupportScreen())),
           ),
           const Divider(height: 1, indent: 16, endIndent: 16),
           _buildProfileOption(
             icon: Icons.privacy_tip_outlined,
-            title: "Privacy Policy",
+            title: AppLocalizations.of(context)!.privacyPolicy,
             onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -349,7 +351,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(height: 1, indent: 16, endIndent: 16),
           _buildProfileOption(
             icon: Icons.logout,
-            title: "Log Out",
+            title: AppLocalizations.of(context)!.logOut,
             onTap: _logout,
             textColor: Colors.red,
           ),

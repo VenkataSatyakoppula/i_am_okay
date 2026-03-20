@@ -1,10 +1,10 @@
 class AppConfig {
   // TODO: Update this URL with current tunnel URL
-  static const String apiUrl = 'https://jhclxnt3-5200.usw3.devtunnels.ms/graphql';
+  static const String apiUrl = 'https://amok.dev.selltis.com/graphql';
 
   // Notification Settings
-  static const int followUpReminderDelayMinutes = 1;
-  static const int emergencySmsDelayMinutes = 2;
+  static const int followUpReminderDelayMinutes = 10;
+  static const int emergencySmsDelayMinutes = 25;
 
   /// Default country code for phone/SMS (e.g. "1" US). Backend treats missing as "1".
   static const String defaultPhoneExt = '1';

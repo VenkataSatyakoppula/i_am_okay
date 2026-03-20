@@ -1,0 +1,335 @@
+{
+  "@@locale": "fr",
+  "appTitle": "IAmOkay",
+  "languageEnglish": "English",
+  "languageFrench": "Français",
+  "welcomeMessage": "Bienvenue dans votre compagnon de sécurité personnel.",
+  "getStarted": "Commencer",
+  "iAlreadyHaveAccount": "J'ai déjà un compte",
+  "poweredBy": "Propulsé par",
+  "home": "Accueil",
+  "history": "Historique",
+  "contacts": "Contacts",
+  "settings": "Paramètres",
+  "howAreYouFeelingToday": "Comment vous sentez-vous aujourd'hui ?",
+  "iAmOkay": "Je vais bien",
+  "setDailyReminder": "Définir un rappel quotidien",
+  "setDailyReminderToCheckIn": "Définir un rappel quotidien pour vous connecter",
+  "youHaveCheckedInForToday": "Vous avez effectué votre pointage aujourd'hui !",
+  "nextReminderIn": "Prochain rappel dans",
+  "nextReminderTomorrowAt": "Prochain rappel demain à",
+  "pauseReminder": "Mettre en pause le rappel",
+  "resumeReminder": "Reprendre le rappel",
+  "resumeReminderConfirm": "Reprendre le rappel ?",
+  "wouldYouLikeToStartReminders": "Souhaitez-vous recommencer à recevoir des rappels quotidiens ?",
+  "yesResume": "Oui, reprendre",
+  "no": "Non",
+  "cancel": "Annuler",
+  "custom": "Personnalisé",
+  "hours24": "24 heures",
+  "days2": "2 jours",
+  "week1": "1 semaine",
+  "dailyCheckInAt": "Pointage quotidien à",
+  "reminderPausedUntil": "Rappel en pause jusqu'au",
+  "reminderResumed": "Rappel repris",
+  "checkInSuccessful": "Pointage réussi ! Vous allez bien !",
+  "checkInFailed": "Échec du pointage. Veuillez réessayer.",
+  "checkInFailedFromNotification": "Échec du pointage. Veuillez réessayer depuis l'application.",
+  "emergencyContacts": "Contacts d'urgence",
+  "addUpTo3Contacts": "Ajouter jusqu'à 3 contacts d'urgence ({count}/3)",
+  "@addUpTo3Contacts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "refresh": "Actualiser",
+  "readyToReceiveAlerts": "Prêt à recevoir les alertes",
+  "waitingForConfirmation": "En attente de confirmation",
+  "editProfile": "Modifier le profil",
+  "dailyReminder": "Rappel quotidien",
+  "privacyPolicy": "Politique de confidentialité",
+  "aboutUs": "À propos",
+  "support": "Assistance",
+  "biometric": "Biométrie",
+  "permissions": "Autorisations",
+  "logOut": "Déconnexion",
+  "goToLogin": "Aller à la connexion",
+  "contactDashboard": "Tableau de bord des contacts",
+  "emergencyContactFor": "Contact d'urgence pour",
+  "historyOf": "Historique de {name}",
+  "@historyOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "somethingWentWrong": "Une erreur s'est produite. Veuillez réessayer.",
+  "pleaseCheckConnection": "Veuillez vérifier votre connexion Internet et réessayer.",
+  "connectionIssue": "Problème de connexion",
+  "logoutAndSignInAgain": "Nous avons des difficultés à nous connecter. Veuillez vous déconnecter et vous reconnecter pour continuer.",
+  "logoutAndSignInButton": "Se déconnecter et se reconnecter",
+  "userInformation": "Informations utilisateur",
+  "actions": "Actions",
+  "failedToLoadProfile": "Échec du chargement du profil. Vous êtes peut-être hors ligne.",
+  "pleaseSelectState": "Veuillez sélectionner un état",
+  "profileUpdatedSuccessfully": "Profil mis à jour avec succès !",
+  "reminderTimeUpdated": "Heure du rappel mise à jour avec succès !",
+  "pleaseSelectTimeFirst": "Veuillez d'abord sélectionner une heure",
+  "errorLoadingHistory": "Erreur lors du chargement de l'historique",
+  "navigate": "Naviguer",
+  "hiName": "Bonjour, {name}",
+  "@hiName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "firstName": "Prénom",
+  "lastName": "Nom de famille",
+  "aliasName": "Alias",
+  "country": "Pays",
+  "mobileNumber": "Numéro de téléphone",
+  "addressLine1": "Adresse ligne 1",
+  "addressLine2": "Adresse ligne 2",
+  "city": "Ville",
+  "zipCode": "Code postal",
+  "state": "État",
+  "email": "Email",
+  "hintFirstName": "Entrez votre prénom",
+  "hintLastName": "Entrez votre nom de famille",
+  "hintAliasName": "Entrez votre alias",
+  "hintSelectCountry": "Sélectionnez le pays",
+  "hintMobileNumber": "Entrez votre numéro de téléphone",
+  "hintAddressLine1": "Adresse, boîte postale, etc.",
+  "hintAddressLine2": "Appartement, suite, unité, etc.",
+  "hintCity": "Entrez votre ville",
+  "hintZipCode": "Code postal",
+  "hintSelectState": "Sélectionnez l'état",
+  "hintEmail": "Entrez votre adresse email",
+  "hintFullName": "Entrez le nom complet",
+  "hintPhoneNumber": "Entrez le numéro de téléphone",
+  "hintContactEmail": "Entrez l'adresse email",
+  "hintOtpCode": "Entrez le code à 6 chiffres",
+  "hintSelectRelation": "Sélectionnez la relation",
+  "validationFirstNameRequired": "Le prénom est requis",
+  "validationLastNameRequired": "Le nom de famille est requis",
+  "validationOnlyAlphabets": "Seules les lettres sont autorisées",
+  "validationMobileRequired": "Le numéro de téléphone est requis",
+  "validationMobile10Digits": "Entrez un numéro valide (8 à 12 chiffres)",
+  "validationAddressRequired": "L'adresse ligne 1 est requise",
+  "validationCityRequired": "La ville est requise",
+  "validationZipRequired": "Le code postal est requis",
+  "validationZip5Digits": "Entrez un code postal valide à 5 chiffres",
+  "validationEmailInvalid": "Entrez une adresse email valide",
+  "validationPleaseEnterMobile": "Veuillez entrer le numéro de téléphone",
+  "validationPleaseEnterMobile10": "Veuillez entrer un numéro valide (8 à 12 chiffres)",
+  "validationNameRequired": "Le nom est requis",
+  "pleaseSelectRelation": "Veuillez sélectionner une relation",
+  "validationPhoneRequired": "Le numéro de téléphone est requis",
+  "validationPhone10Digits": "Entrez un numéro valide (8 à 12 chiffres)",
+  "register": "S'inscrire",
+  "signIn": "Se connecter",
+  "saveChanges": "Enregistrer les modifications",
+  "welcome": "Bienvenue",
+  "welcomeBack": "Bon retour",
+  "signInToContinue": "Connectez-vous pour accéder à votre compte",
+  "dontHaveAccount": "Vous n'avez pas de compte ? ",
+  "loginWithBiometrics": "Connexion par biométrie",
+  "tapToUseBiometrics": "Appuyez pour utiliser la biométrie",
+  "otpSentMessage": "Nous avons envoyé un mot de passe à usage unique à votre numéro de téléphone.",
+  "otpCode": "Code OTP",
+  "verifyAndLogin": "Vérifier et se connecter",
+  "resendCode": "Renvoyer le code",
+  "resendCodeIn": "Renvoyer le code dans {seconds}s",
+  "@resendCodeIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "editContact": "Modifier le contact",
+  "addNewContact": "Ajouter un nouveau contact",
+  "relation": "Relation",
+  "fullName": "Nom complet",
+  "phoneNumber": "Numéro de téléphone",
+  "sendAlertsVia": "Envoyer les alertes via",
+  "sms": "SMS",
+  "whatsApp": "WhatsApp",
+  "consentDisclaimer": "En ajoutant ce contact, vous confirmez qu'il a accepté de recevoir des alertes d'urgence automatiques de IamOkay.\n\nLa fréquence des messages varie. Des frais de messagerie et de données peuvent s'appliquer.\n\nRépondez STOP pour vous désinscrire. Répondez HELP pour l'aide.",
+  "consentDisclaimerBase": "En ajoutant ce contact, vous confirmez qu'il a accepté de recevoir des alertes d'urgence automatiques de IamOkay.",
+  "consentDisclaimerSmsRates": "La fréquence des messages varie. Des frais de messagerie et de données peuvent s'appliquer.\n\nRépondez STOP pour vous désinscrire. Répondez HELP pour l'aide.",
+  "consentCheckbox": "Je confirme que ce contact a consenti à recevoir des alertes SMS de IamOkay.",
+  "consentCheckboxSms": "Je confirme que ce contact a consenti à recevoir des alertes SMS de IamOkay.",
+  "consentCheckboxWhatsApp": "Je confirme que ce contact a consenti à recevoir des alertes WhatsApp de IamOkay.",
+  "phoneCannotChange": "Le numéro de téléphone ne peut pas être modifié pour les contacts vérifiés.",
+  "updateContact": "Mettre à jour le contact",
+  "addContact": "Ajouter le contact",
+  "addAnotherContact": "Ajouter un autre contact",
+  "next": "Suivant",
+  "pleaseConfirmConsent": "Veuillez confirmer que le contact a consenti à recevoir les alertes.",
+  "relationParent": "Parent",
+  "relationSpouse": "Conjoint(e)",
+  "relationChild": "Enfant",
+  "relationSibling": "Frère/Sœur",
+  "relationFriend": "Ami(e)",
+  "relationPartner": "Partenaire",
+  "relationOther": "Autre",
+  "userNotFoundPleaseLogin": "Utilisateur introuvable localement. Veuillez vous reconnecter.",
+  "goToLogin": "Aller à la connexion",
+  "address": "Adresse",
+  "user": "Utilisateur",
+  "setTimeForDailyCheckIn": "Définissez une heure pour votre pointage de sécurité quotidien.",
+  "selectTime": "Sélectionner l'heure",
+  "setReminder": "Définir le rappel",
+  "updateReminder": "Mettre à jour le rappel",
+  "permissionsRequired": "Autorisations requises",
+  "permissionsRequiredDescription": "Pour assurer votre sécurité et offrir la meilleure expérience, nous avons besoin d'accéder aux autorisations suivantes :",
+  "notifications": "Notifications",
+  "notificationsDescription": "Pour vous rappeler de vous connecter quotidiennement et vous assurer que vous allez bien.",
+  "locationOptional": "Localisation (optionnel)",
+  "locationDescription": "Pour inclure votre position actuelle dans les alertes d'urgence envoyées à vos contacts.",
+  "alarms": "Alarmes",
+  "alarmsDescription": "Pour planifier des rappels et des contrôles de sécurité précis.",
+  "fullScreenIntent": "Intention plein écran",
+  "fullScreenIntentDescription": "Pour ouvrir l'application lorsque l'alarme sonne sur l'écran de verrouillage. Appuyez pour activer dans Paramètres.",
+  "grantPermissions": "Accorder les autorisations",
+  "continueButton": "Continuer",
+  "enablePermissionsLater": "Vous pouvez activer les autorisations plus tard dans Paramètres si nécessaire.",
+  "authenticateToEnableBiometric": "Veuillez vous authentifier pour activer la connexion biométrique",
+  "biometricAuthFailed": "L'authentification biométrique a échoué. Veuillez réessayer.",
+  "enableBiometricLogin": "Activer la connexion biométrique",
+  "biometricLoginDescription": "Connectez-vous plus rapidement et en toute sécurité avec votre empreinte digitale ou votre visage.",
+  "biometricsNotAvailable": "La biométrie n'est pas disponible sur cet appareil.",
+  "skipForNow": "Passer pour l'instant",
+  "ourMission": "Notre mission",
+  "aboutUsMission": "IamOkay est dédié à vous garder en contact avec les personnes qui tiennent à vous. Nous aidons les utilisateurs à rester en sécurité en permettant des pointages quotidiens simples et des alertes d'urgence automatiques aux contacts désignés en cas de besoin.",
+  "howItWorks": "Comment ça marche",
+  "aboutUsHowItWorks": "Définissez une heure de rappel quotidien qui vous convient. Connectez-vous lorsque vous y êtes invité pour informer vos contacts d'urgence que vous allez bien. Si vous manquez un pointage, vos contacts peuvent être notifiés afin qu'ils puissent vous contacter et s'assurer de votre bien-être.",
+  "features": "Fonctionnalités",
+  "aboutUsFeatures": "• Rappels de pointage quotidiens\n• Jusqu'à 3 contacts d'urgence\n• Partage de localisation optionnel pour les alertes\n• Mettre en pause les rappels si nécessaire\n• Conception simple et axée sur la confidentialité",
+  "version": "Version",
+  "appVersion": "IamOkay v1.0.0",
+  "contactUs": "Contactez-nous",
+  "supportContactText": "Email : support@iamokay.app\nNous répondons généralement sous 24 à 48 heures.",
+  "faq": "Questions fréquemment posées",
+  "faqAddContactQuestion": "Comment ajouter un contact d'urgence ?",
+  "faqAddContactAnswer": "Allez dans l'onglet Contacts, appuyez sur Ajouter un contact et entrez son nom, sa relation et son numéro de téléphone. Vous pouvez ajouter jusqu'à 3 contacts d'urgence.",
+  "faqMissCheckInQuestion": "Que se passe-t-il si je manque un pointage ?",
+  "faqMissCheckInAnswer": "Si vous ne vous connectez pas à l'heure de votre rappel, vos contacts d'urgence peuvent recevoir une alerte afin de pouvoir vous contacter.",
+  "faqPauseRemindersQuestion": "Puis-je mettre en pause mes rappels ?",
+  "faqPauseRemindersAnswer": "Oui. Sur l'écran d'accueil, utilisez « Mettre en pause le rappel » pour arrêter temporairement les rappels de pointage pendant 24 heures, 2 jours, 1 semaine ou une date personnalisée.",
+  "faqLocationQuestion": "Ma localisation est-elle partagée ?",
+  "faqLocationAnswer": "La localisation n'est incluse dans les alertes d'urgence que si vous avez accordé l'autorisation de localisation et qu'elle est activée dans vos paramètres.",
+  "resources": "Ressources",
+  "supportResources": "• Politique de confidentialité (voir Paramètres)\n• Version de l'application et mises à jour via le magasin de votre appareil",
+  "soon": "bientôt",
+  "daysCount": "{count} jours",
+  "@daysCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "oneDay": "1 jour",
+  "hoursCount": "{count} heures",
+  "@hoursCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "oneHour": "1 heure",
+  "minutesCount": "{count} minutes",
+  "@minutesCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "lessThanAMinute": "moins d'une minute",
+  "nextReminderTomorrowAtTime": "Prochain rappel demain à {time}",
+  "@nextReminderTomorrowAtTime": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "nextReminderInHms": "Prochain rappel dans {hours}h {minutes}m {seconds}s",
+  "@nextReminderInHms": {
+    "placeholders": {
+      "hours": {"type": "int"},
+      "minutes": {"type": "int"},
+      "seconds": {"type": "int"}
+    }
+  },
+  "nextReminderInMs": "Prochain rappel dans {minutes}m {seconds}s",
+  "@nextReminderInMs": {
+    "placeholders": {
+      "minutes": {"type": "int"},
+      "seconds": {"type": "int"}
+    }
+  },
+  "nextReminderInS": "Prochain rappel dans {seconds}s",
+  "@nextReminderInS": {
+    "placeholders": {
+      "seconds": {"type": "int"}
+    }
+  },
+  "reminderPausedUntilDate": "Rappel en pause jusqu'au {date}",
+  "@reminderPausedUntilDate": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "paused": "En pause",
+  "resumesIn": "Reprend dans {time}",
+  "@resumesIn": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "notificationDailyCheckInTitle": "Pointage quotidien",
+  "notificationDailyCheckInBody": "C'est l'heure de vous connecter ! Vous allez bien ?",
+  "notificationCheckInReminderTitle": "Rappel de pointage",
+  "notificationCheckInReminderBody": "Vous ne vous êtes pas encore connecté. Tout va bien ?",
+  "notificationAlarmChannelName": "Alarme de pointage quotidien",
+  "notificationAlarmChannelDesc": "Alarme sonore pour le pointage quotidien avec son et vibration",
+  "notificationChannelName": "Pointage quotidien",
+  "notificationChannelDesc": "Vous rappelle de vous connecter quotidiennement",
+  "userNotIdentifiedPleaseLogin": "Utilisateur non identifié. Veuillez vous reconnecter.",
+  "retry": "Réessayer",
+  "noHistoryAvailableYet": "Aucun historique disponible pour le moment.",
+  "locationAvailable": "Localisation disponible",
+  "locationNotAvailable": "Localisation non disponible",
+  "checkInDetails": "Détails du pointage",
+  "statusLabel": "Statut : {status}",
+  "@statusLabel": {
+    "placeholders": {
+      "status": {"type": "String"}
+    }
+  },
+  "dateLabel": "Date : {date}",
+  "@dateLabel": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "timeLabel": "Heure : {time}",
+  "@timeLabel": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "dateAtTime": "{date} à {time}",
+  "@dateAtTime": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "time": {"type": "String"}
+    }
+  },
+  "close": "Fermer",
+  "couldNotOpenMaps": "Impossible d'ouvrir l'application de cartes",
+  "selectLanguage": "Sélectionnez votre langue",
+  "selectLanguageDescription": "Choisissez la langue de votre choix pour l'application"
+}

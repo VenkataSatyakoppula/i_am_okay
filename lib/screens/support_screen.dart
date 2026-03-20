@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:IamOkay/l10n/app_localizations.dart';
 
 class SupportScreen extends StatelessWidget {
   const SupportScreen({super.key});
@@ -7,9 +8,9 @@ class SupportScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Support',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        title: Text(
+          AppLocalizations.of(context)!.support,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         backgroundColor: const Color(0xFF1F4ED8),
         foregroundColor: Colors.white,
@@ -20,39 +21,37 @@ class SupportScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _SectionHeading(title: 'Contact Us'),
+            _SectionHeading(title: AppLocalizations.of(context)!.contactUs),
             const SizedBox(height: 12),
-            const Text(
-              'Email: support@iamokay.app\n'
-              'We typically respond within 24–48 hours.',
-              style: TextStyle(fontSize: 16.0, height: 1.5, color: Color(0xFF333333)),
+            Text(
+              AppLocalizations.of(context)!.supportContactText,
+              style: const TextStyle(fontSize: 16.0, height: 1.5, color: Color(0xFF333333)),
             ),
             const SizedBox(height: 24),
-            _SectionHeading(title: 'Frequently Asked Questions'),
+            _SectionHeading(title: AppLocalizations.of(context)!.faq),
             const SizedBox(height: 12),
             _FAQItem(
-              question: 'How do I add an emergency contact?',
-              answer: 'Go to the Contacts tab, tap Add Contact, and enter their name, relation, and phone number. You can add up to 3 emergency contacts.',
+              question: AppLocalizations.of(context)!.faqAddContactQuestion,
+              answer: AppLocalizations.of(context)!.faqAddContactAnswer,
             ),
             _FAQItem(
-              question: 'What happens if I miss a check-in?',
-              answer: 'If you don’t check in by your reminder time, your emergency contacts may receive an alert so they can reach out to you.',
+              question: AppLocalizations.of(context)!.faqMissCheckInQuestion,
+              answer: AppLocalizations.of(context)!.faqMissCheckInAnswer,
             ),
             _FAQItem(
-              question: 'Can I pause my reminders?',
-              answer: 'Yes. On the Home screen, use "Pause Reminder" to temporarily stop check-in reminders for 24 hours, 2 days, 1 week, or a custom date.',
+              question: AppLocalizations.of(context)!.faqPauseRemindersQuestion,
+              answer: AppLocalizations.of(context)!.faqPauseRemindersAnswer,
             ),
             _FAQItem(
-              question: 'Is my location shared?',
-              answer: 'Location is only included in emergency alerts if you have granted location permission and it is enabled in your settings.',
+              question: AppLocalizations.of(context)!.faqLocationQuestion,
+              answer: AppLocalizations.of(context)!.faqLocationAnswer,
             ),
             const SizedBox(height: 24),
-            _SectionHeading(title: 'Resources'),
+            _SectionHeading(title: AppLocalizations.of(context)!.resources),
             const SizedBox(height: 12),
-            const Text(
-              '• Privacy Policy (see Settings)\n'
-              '• App version and updates via your device’s store',
-              style: TextStyle(fontSize: 16.0, height: 1.6, color: Color(0xFF333333)),
+            Text(
+              AppLocalizations.of(context)!.supportResources,
+              style: const TextStyle(fontSize: 16.0, height: 1.6, color: Color(0xFF333333)),
             ),
           ],
         ),

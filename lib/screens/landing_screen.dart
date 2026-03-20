@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:provider/provider.dart';
+import 'package:IamOkay/l10n/app_localizations.dart';
+import '../providers/locale_provider.dart';
 import '../widgets/custom_button.dart';
+import '../widgets/language_dropdown.dart';
 import 'register_screen.dart';
 import 'login_screen.dart';
 import 'home_screen.dart';
@@ -113,7 +117,30 @@ class _LandingScreenState extends State<LandingScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 60),
+                  // Language dropdown - top right
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 8.0, right: 8.0),
+                      child: Consumer<LocaleProvider>(
+                        builder: (context, localeProvider, _) => Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: ColorScheme.light(
+                              primary: const Color(0xFF1F4ED8),
+                              onPrimary: Colors.white,
+                              surface: Colors.white,
+                              onSurface: const Color(0xFF333333),
+                            ),
+                          ),
+                          child: LanguageDropdown(
+                            localeProvider: localeProvider,
+                            iconColor: const Color(0xFF333333),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 40),
                   // Logo
                   Center(
                     child: ScaleTransition(
@@ -129,30 +156,43 @@ class _LandingScreenState extends State<LandingScreen>
                   ),
 
               const SizedBox(height: 16),
-              const Center(
-                child: Text(
-                  'Welcome to your personal safety companion.',
-                  textAlign: TextAlign.center,
+              Center(
+                child: Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context);
+                    return Text(
+                      l10n?.welcomeMessage ?? 'Welcome to your personal safety companion.',
+                      textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20.0, // Body text: 18-20
                     fontWeight: FontWeight.w400, // Regular (400)
                     color: Color(0xFF333333), // Secondary Text
                   ),
+                    );
+                  },
                 ),
               ),
               const Spacer(),
-              CustomButton(
-                text: 'Get Started',
+              Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  return CustomButton(
+                    text: l10n?.getStarted ?? 'Get Started',
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const RegisterScreen()),
                   );
                 },
+                  );
+                },
               ),
               const SizedBox(height: 16),
-              CustomButton(
-                text: 'I already have an account',
+              Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  return CustomButton(
+                    text: l10n?.iAlreadyHaveAccount ?? 'I already have an account',
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -161,29 +201,36 @@ class _LandingScreenState extends State<LandingScreen>
                 },
                 backgroundColor: Colors.white, // White background
                 textColor: const Color(0xFF1F4ED8), // Deep Blue text
+                  );
+                },
               ),
               const SizedBox(height: 32),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Powered by ',
-                    style: TextStyle(
-                      fontSize: 12.0,
-                      color: Color.fromARGB(255, 0, 0, 0),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  SvgPicture.asset(
+              Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '${l10n?.poweredBy ?? 'Powered by'} ',
+                        style: const TextStyle(
+                          fontSize: 12.0,
+                          color: Color.fromARGB(255, 0, 0, 0),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      SvgPicture.asset(
                     'assets/icons/InfodatLogoTop.svg',
                     height: 20,
                   ),
                   const SizedBox(width: 8),
-                  Image.asset(
-                    'assets/icons/Selltis_Logolockup.png',
-                    height: 20,
-                  ),
-                ],
+                      Image.asset(
+                        'assets/icons/Selltis_Logolockup.png',
+                        height: 20,
+                      ),
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 16),
             ],

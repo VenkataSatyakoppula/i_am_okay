@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:IamOkay/l10n/app_localizations.dart';
 import '../models/checkin_model.dart';
 import '../services/graphql_service.dart';
+import '../utils/api_error_handler.dart';
 
 class HistoryScreen extends StatefulWidget {
   final String? contactId;
@@ -35,7 +37,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       if (userId == null) {
         if (mounted) {
           setState(() {
-            _errorMessage = 'User not identified. Please log in again.';
+            _errorMessage = AppLocalizations.of(context)!.userNotIdentifiedPleaseLogin;
             _isLoading = false;
           });
         }
@@ -54,9 +56,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Something went wrong. Please try again.';
           _isLoading = false;
         });
+        await ApiErrorHandler.handle(context, e);
       }
     }
   }
@@ -86,7 +88,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Error loading history',
+                AppLocalizations.of(context)!.errorLoadingHistory,
                 style: TextStyle(
                   fontSize: 18.0,
                   fontWeight: FontWeight.w600,
@@ -110,7 +112,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF1F4ED8),
                 ),
-                child: const Text('Retry'),
+                child: Text(AppLocalizations.of(context)!.retry),
               ),
             ],
           ),
@@ -119,9 +121,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
 
     if (_checkIns.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
-          'No history available yet.',
+          AppLocalizations.of(context)!.noHistoryAvailableYet,
           style: TextStyle(
             fontSize: 18.0,
             color: Color(0xFF333333),
@@ -138,9 +140,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
         itemCount: _checkIns.length,
         itemBuilder: (context, index) {
           final checkIn = _checkIns[index];
+          final locale = Localizations.localeOf(context).toString();
           final date = (checkIn.timestamp ?? checkIn.createdAt ?? DateTime.now()).toLocal();
-          final formattedDate = DateFormat('MMM d, yyyy').format(date);
-          final formattedTime = DateFormat('h:mm a').format(date);
+          final formattedDate = DateFormat.yMMMd(locale).format(date);
+          final formattedTime = DateFormat.jm(locale).format(date);
 
           return Card(
             margin: const EdgeInsets.only(bottom: 16.0),
@@ -183,7 +186,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '$formattedDate at $formattedTime',
+                            AppLocalizations.of(context)!.dateAtTime(formattedDate, formattedTime),
                             style: const TextStyle(
                               fontSize: 14.0,
                               color: Color(0xFF666666),
@@ -199,8 +202,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                   color: Color(0xFF666666),
                                 ),
                                 const SizedBox(width: 4),
-                                const Text(
-                                  'Location available',
+                                Text(
+                                  AppLocalizations.of(context)!.locationAvailable,
                                   style: TextStyle(
                                     fontSize: 12.0,
                                     color: Color(0xFF666666),
@@ -234,9 +237,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Future<void> _showCheckInDetails(BuildContext context, CheckIn checkIn) async {
+    final locale = Localizations.localeOf(context).toString();
     final date = (checkIn.timestamp ?? checkIn.createdAt ?? DateTime.now()).toLocal();
-    final formattedDate = DateFormat('MMM d, yyyy').format(date);
-    final formattedTime = DateFormat('h:mm a').format(date);
+    final formattedDate = DateFormat.yMMMd(locale).format(date);
+    final formattedTime = DateFormat.jm(locale).format(date);
 
     double? lat;
     double? lng;
@@ -255,32 +259,33 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
     if (!mounted) return;
 
+    final l10n = AppLocalizations.of(context)!;
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Check-in Details'),
+        title: Text(l10n.checkInDetails),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Status: ${checkIn.status}',
+              l10n.statusLabel(checkIn.status),
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
-            Text('Date: $formattedDate'),
-            Text('Time: $formattedTime'),
+            Text(l10n.dateLabel(formattedDate)),
+            Text(l10n.timeLabel(formattedTime)),
             const SizedBox(height: 16),
             if (hasValidLocation)
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.location_on, size: 16, color: Color(0xFF1F4ED8)),
-                  SizedBox(width: 4),
+                  const Icon(Icons.location_on, size: 16, color: Color(0xFF1F4ED8)),
+                  const SizedBox(width: 4),
                   Text(
-                    'Location available',
+                    l10n.locationAvailable,
                     style: TextStyle(
                       color: Color(0xFF1F4ED8),
                       fontWeight: FontWeight.w500,
@@ -304,7 +309,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             style: TextButton.styleFrom(
               foregroundColor: const Color(0xFF333333),
             ),
-            child: const Text('Close'),
+            child: Text(l10n.close),
           ),
           if (hasValidLocation)
             ElevatedButton.icon(
@@ -321,8 +326,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   } else {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Could not open maps application')),
+                        SnackBar(content: Text(l10n.couldNotOpenMaps)),
                       );
                     }
                   }
@@ -331,7 +335,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 }
               },
               icon: const Icon(Icons.map, size: 18),
-              label: const Text('Navigate'),
+              label: Text(l10n.navigate),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1F4ED8),
                 foregroundColor: Colors.white,

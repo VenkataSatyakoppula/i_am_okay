@@ -11,7 +11,12 @@ import '../services/notification_service.dart';
 import '../widgets/loading_overlay.dart';
 import 'emergency_contact_screen.dart';
 import 'daily_reminder_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:IamOkay/l10n/app_localizations.dart';
+import '../providers/locale_provider.dart';
+import '../utils/api_error_handler.dart';
 import '../widgets/custom_bottom_navbar.dart';
+import '../widgets/language_dropdown.dart';
 import '../widgets/bottom_nav_item.dart';
 import 'history_screen.dart';
 import 'settings_screen.dart';
@@ -56,51 +61,54 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
   }
 
-  String get _currentTitle {
+  String _currentTitle(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) return 'Home';
     if (_userRole == 'contact') {
       switch (_currentIndex) {
         case 0:
-          return 'History';
+          return l10n.history;
         case 1:
-          return 'Settings';
+          return l10n.settings;
         default:
-          return 'History';
+          return l10n.history;
       }
     }
     switch (_currentIndex) {
       case 0:
-        return 'Home';
+        return l10n.home;
       case 1:
-        return 'History';
+        return l10n.history;
       case 2:
-        return 'Emergency Contacts';
+        return l10n.emergencyContacts;
       case 3:
-        return 'Settings';
+        return l10n.settings;
       default:
-        return 'Home';
+        return l10n.home;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-
+    final l10n = AppLocalizations.of(context);
+    final localeProvider = context.watch<LocaleProvider>();
     final List<BottomNavItem> navItems = _userRole == 'contact'
         ? [
-            BottomNavItem(icon: Icons.history, label: 'History'),
-            BottomNavItem(icon: Icons.settings, label: 'Settings'),
+            BottomNavItem(icon: Icons.history, label: l10n?.history ?? 'History'),
+            BottomNavItem(icon: Icons.settings, label: l10n?.settings ?? 'Settings'),
           ]
         : [
-            BottomNavItem(icon: Icons.home, label: 'Home'),
-            BottomNavItem(icon: Icons.history, label: 'History'),
-            BottomNavItem(icon: Icons.contact_phone, label: 'Contacts'),
-            BottomNavItem(icon: Icons.settings, label: 'Settings'),
+            BottomNavItem(icon: Icons.home, label: l10n?.home ?? 'Home'),
+            BottomNavItem(icon: Icons.history, label: l10n?.history ?? 'History'),
+            BottomNavItem(icon: Icons.contact_phone, label: l10n?.contacts ?? 'Contacts'),
+            BottomNavItem(icon: Icons.settings, label: l10n?.settings ?? 'Settings'),
           ];
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF1F4ED8),
         title: Text(
-          _currentTitle,
+          _currentTitle(context),
           style: const TextStyle(
             color: Colors.white,
             fontSize: 22.0,
@@ -109,6 +117,9 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         automaticallyImplyLeading: false,
         centerTitle: false,
+        actions: [
+          LanguageDropdown(localeProvider: localeProvider),
+        ],
       ),
       body: _screens[_currentIndex],
       bottomNavigationBar: CustomBottomNavbar(
@@ -293,7 +304,7 @@ class _HomeContentState extends State<HomeContent>
         }
       }
     } catch (e) {
-      // Error fetching user data
+      if (mounted) await ApiErrorHandler.handle(context, e);
     } finally {
       if (mounted) {
         setState(() {
@@ -305,40 +316,42 @@ class _HomeContentState extends State<HomeContent>
 
   String _getRelativeTime(DateTime? until) {
     if (until == null) return '';
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final localUntil = until.toLocal();
     final diff = localUntil.difference(now);
     
-    if (diff.isNegative) return 'soon';
+    if (diff.isNegative) return l10n.soon;
     
     if (diff.inDays > 1) {
-      return '${diff.inDays} days';
+      return l10n.daysCount(diff.inDays);
     } else if (diff.inDays == 1) {
-      return '1 day';
+      return l10n.oneDay;
     } else if (diff.inHours > 1) {
-      return '${diff.inHours} hours';
+      return l10n.hoursCount(diff.inHours);
     } else if (diff.inHours == 1) {
-      return '1 hour';
+      return l10n.oneHour;
     } else if (diff.inMinutes > 1) {
-      return '${diff.inMinutes} minutes';
+      return l10n.minutesCount(diff.inMinutes);
     } else {
-      return 'less than a minute';
+      return l10n.lessThanAMinute;
     }
   }
 
   void _showResumeConfirmDialog() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Resume Reminder?'),
-        content: const Text('Would you like to start receiving daily reminders again?'),
+        title: Text(l10n.resumeReminderConfirm),
+        content: Text(l10n.wouldYouLikeToStartReminders),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             style: TextButton.styleFrom(
               foregroundColor: const Color(0xFF333333),
             ),
-            child: const Text('No'),
+            child: Text(l10n.no),
           ),
           TextButton(
             onPressed: () {
@@ -349,7 +362,7 @@ class _HomeContentState extends State<HomeContent>
               foregroundColor: const Color(0xFF1F4ED8),
               textStyle: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            child: const Text('Yes, Resume'),
+            child: Text(l10n.yesResume),
           ),
         ],
       ),
@@ -459,20 +472,21 @@ class _HomeContentState extends State<HomeContent>
   }
 
   String _getNextCheckInCountdown() {
+    final l10n = AppLocalizations.of(context)!;
     final next = _getNextCheckInDateTime();
     if (next == null) return '';
     final diff = next.difference(DateTime.now());
-    if (diff.isNegative) return 'Next reminder tomorrow at $_reminderTime';
+    if (diff.isNegative) return l10n.nextReminderTomorrowAtTime(_reminderTime ?? '');
     final hours = diff.inHours;
     final minutes = diff.inMinutes % 60;
     final seconds = diff.inSeconds % 60;
     if (hours > 0) {
-      return 'Next reminder in ${hours}h ${minutes}m ${seconds}s';
+      return l10n.nextReminderInHms(hours, minutes, seconds);
     }
     if (minutes > 0) {
-      return 'Next reminder in ${minutes}m ${seconds}s';
+      return l10n.nextReminderInMs(minutes, seconds);
     }
-    return 'Next reminder in ${seconds}s';
+    return l10n.nextReminderInS(seconds);
   }
 
   Future<void> _updateReminderStatus(bool isPaused, DateTime? pausedUntil) async {
@@ -529,12 +543,13 @@ class _HomeContentState extends State<HomeContent>
           }
         }
 
-        String message;
+        final l10n = AppLocalizations.of(context)!;
+        final String message;
         if (isPaused) {
           final dateStr = pausedUntil?.toString().split(' ')[0] ?? '';
-          message = 'Reminder paused until $dateStr';
+          message = l10n.reminderPausedUntilDate(dateStr);
         } else {
-          message = 'Reminder resumed';
+          message = l10n.reminderResumed;
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -544,28 +559,24 @@ class _HomeContentState extends State<HomeContent>
     } catch (e) {
       if (mounted) {
         LoadingOverlay.hide(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Something went wrong. Please try again.'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        await ApiErrorHandler.handle(context, e);
       }
     }
   }
 
   void _showPauseReminderOptions() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Pause Reminder'),
+        title: Text(l10n.pauseReminder),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildOption(context, '24 hours', duration: const Duration(hours: 24)),
-            _buildOption(context, '2 days', duration: const Duration(days: 2)),
-            _buildOption(context, '1 week', duration: const Duration(days: 7)),
-            _buildOption(context, 'Custom', isCustom: true),
+            _buildOption(context, l10n.hours24, duration: const Duration(hours: 24)),
+            _buildOption(context, l10n.days2, duration: const Duration(days: 2)),
+            _buildOption(context, l10n.week1, duration: const Duration(days: 7)),
+            _buildOption(context, l10n.custom, isCustom: true),
           ],
         ),
         actions: [
@@ -574,7 +585,7 @@ class _HomeContentState extends State<HomeContent>
             style: TextButton.styleFrom(
               foregroundColor: const Color(0xFF333333),
             ),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
         ],
       ),
@@ -613,6 +624,7 @@ class _HomeContentState extends State<HomeContent>
   }
 
   Widget _buildPauseResumeButton() {
+    final l10n = AppLocalizations.of(context)!;
     if (_isPaused) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -621,8 +633,8 @@ class _HomeContentState extends State<HomeContent>
           const SizedBox(width: 8),
           GestureDetector(
             onTap: _showResumeConfirmDialog,
-            child: const Text(
-              'Resume Reminder',
+            child: Text(
+              l10n.resumeReminder,
               style: TextStyle(
                 fontSize: 18.0,
                 fontWeight: FontWeight.w500,
@@ -637,14 +649,15 @@ class _HomeContentState extends State<HomeContent>
     return TextButton.icon(
       onPressed: _showPauseReminderOptions,
       icon: const Icon(Icons.pause, color: Color(0xFF666666)),
-      label: const Text(
-        'Pause Reminder',
+      label: Text(
+        l10n.pauseReminder,
         style: TextStyle(color: Color(0xFF666666), fontSize: 16),
       ),
     );
   }
 
   Widget _buildMainActionButton() {
+    final l10n = AppLocalizations.of(context)!;
     // Paused: show paused state
     if (_isPaused) {
       return GestureDetector(
@@ -656,8 +669,8 @@ class _HomeContentState extends State<HomeContent>
           children: [
             const Icon(Icons.pause, color: Colors.white, size: 48),
             const SizedBox(height: 8),
-            const Text(
-              'Paused',
+            Text(
+              l10n.paused,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 28.0,
@@ -667,7 +680,7 @@ class _HomeContentState extends State<HomeContent>
             ),
             const SizedBox(height: 4),
             Text(
-              'Resumes in ${_getRelativeTime(_pausedUntil)}',
+              l10n.resumesIn(_getRelativeTime(_pausedUntil)),
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 16.0,
@@ -683,6 +696,7 @@ class _HomeContentState extends State<HomeContent>
 
     // No reminder time set: button disabled, prompt to set reminder
     if (_checkInTimeOfDay == null) {
+      final l10n = AppLocalizations.of(context)!;
       return GestureDetector(
         onTap: () async {
           await Navigator.push(
@@ -703,7 +717,7 @@ class _HomeContentState extends State<HomeContent>
                   size: 48, color: Colors.grey.shade400),
               const SizedBox(height: 8),
               Text(
-                'I am Okay',
+                l10n.iAmOkay,
                 style: TextStyle(
                   fontSize: 22.0,
                   fontWeight: FontWeight.bold,
@@ -712,7 +726,7 @@ class _HomeContentState extends State<HomeContent>
               ),
               const SizedBox(height: 4),
               Text(
-                'Set a daily reminder to check in',
+                l10n.setDailyReminderToCheckIn,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14.0,
@@ -731,7 +745,7 @@ class _HomeContentState extends State<HomeContent>
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'You have checked in for Today!',
+            l10n.youHaveCheckedInForToday,
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 18.0,
@@ -830,7 +844,7 @@ class _HomeContentState extends State<HomeContent>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'I am Okay',
+                  l10n.iAmOkay,
                   style: TextStyle(
                     fontSize: 22.0,
                     fontWeight: FontWeight.bold,
@@ -896,9 +910,9 @@ class _HomeContentState extends State<HomeContent>
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'I am Okay',
-                  style: TextStyle(
+                Text(
+                  l10n.iAmOkay,
+                  style: const TextStyle(
                     fontSize: 22.0,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF1F4ED8),
@@ -952,14 +966,18 @@ class _HomeContentState extends State<HomeContent>
         child: SizedBox(height: 100),
       );
     }
+    final l10n = AppLocalizations.of(context)!;
+    final displayName = _userName != null && _userName!.isNotEmpty
+        ? '$_userName${_userAlias != null && _userAlias!.isNotEmpty ? ' ($_userAlias)' : ''}'
+        : (_userAlias ?? '');
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 48),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          if (_userName != null && _userName!.isNotEmpty)
+          if (displayName.isNotEmpty)
             Text(
-              'Hi, $_userName${_userAlias != null && _userAlias!.isNotEmpty ? ' ($_userAlias)' : ''}',
+              l10n.hiName(displayName),
               style: const TextStyle(
                 fontSize: 26.0,
                 fontWeight: FontWeight.w600,
@@ -967,12 +985,16 @@ class _HomeContentState extends State<HomeContent>
               ),
             ),
           const SizedBox(height: 4),
-          const Text(
-            'How are you feeling today?',
-            style: TextStyle(
-              fontSize: 18.0,
-              fontWeight: FontWeight.w400,
-              color: Color(0xFF666666),
+          SizedBox(
+            width: double.infinity,
+            child: Text(
+              l10n.howAreYouFeelingToday,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18.0,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF666666),
+              ),
             ),
           ),
           const SizedBox(height: 24),
@@ -998,7 +1020,7 @@ class _HomeContentState extends State<HomeContent>
                           color: Color(0xFF333333),
                         ),
                         children: [
-                          const TextSpan(text: "Daily check-in at "),
+                          TextSpan(text: '${l10n.dailyCheckInAt} '),
                           TextSpan(
                             text: _reminderTime,
                             style: const TextStyle(
@@ -1037,9 +1059,9 @@ class _HomeContentState extends State<HomeContent>
                   children: [
                     const Icon(Icons.add_alert, color: Color(0xFF1F4ED8), size: 20),
                     const SizedBox(width: 12),
-                    const Flexible(
+                    Flexible(
                       child: Text(
-                        'Set a Daily Reminder',
+                        l10n.setDailyReminder,
                         style: TextStyle(
                           fontSize: 16.0,
                           fontWeight: FontWeight.w500,

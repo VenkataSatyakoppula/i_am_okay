@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:provider/provider.dart';
+import 'package:IamOkay/l10n/app_localizations.dart';
 import 'package:IamOkay/models/user_model.dart';
 import 'package:IamOkay/screens/history_screen.dart';
 import 'package:IamOkay/screens/landing_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../providers/locale_provider.dart';
 import '../services/notification_service.dart';
 import '../services/graphql_service.dart';
 import '../utils/phone_display_helper.dart';
+import '../widgets/language_dropdown.dart';
 
 class EmergencyContactDashboard extends StatefulWidget {
   const EmergencyContactDashboard({super.key});
@@ -87,7 +91,12 @@ class _EmergencyContactDashboardState extends State<EmergencyContactDashboard> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: const Text('Emergency Contact For'),
+        title: Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context);
+            return Text(l10n?.emergencyContactFor ?? 'Emergency Contact For');
+          },
+        ),
         centerTitle: true,
         backgroundColor: const Color(0xFF1F4ED8),
         elevation: 1,
@@ -102,6 +111,7 @@ class _EmergencyContactDashboardState extends State<EmergencyContactDashboard> {
           child: Image.asset('assets/icons/app_icon.png'),
         ),
         actions: [
+          LanguageDropdown(localeProvider: context.watch<LocaleProvider>()),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: _logout,

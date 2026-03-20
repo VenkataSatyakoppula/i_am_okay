@@ -4,6 +4,9 @@ import 'package:IamOkay/services/graphql_service.dart';
 import 'package:IamOkay/widgets/custom_button.dart';
 import 'package:IamOkay/widgets/custom_text_field.dart';
 import 'package:IamOkay/widgets/custom_dropdown_field.dart';
+import 'package:IamOkay/utils/api_error_handler.dart';
+import 'package:IamOkay/utils/name_validator.dart';
+import 'package:IamOkay/l10n/app_localizations.dart';
 import 'package:IamOkay/widgets/loading_overlay.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -125,12 +128,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     } catch (e) {
       if (mounted) {
         LoadingOverlay.hide(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Something went wrong. Please try again.'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        await ApiErrorHandler.handle(context, e);
       }
     }
   }
@@ -146,12 +144,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           icon: const Icon(Icons.arrow_back, color: Color(0xFF000000)),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
-          'Edit Profile',
-          style: TextStyle(
-            fontSize: 26.0,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF000000),
+        title: Builder(
+          builder: (context) => Text(
+            AppLocalizations.of(context)?.editProfile ?? 'Edit Profile',
+            style: const TextStyle(
+              fontSize: 26.0,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF000000),
+            ),
           ),
         ),
         centerTitle: true,
@@ -161,64 +161,67 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           padding: const EdgeInsets.all(24.0),
           child: Form(
             key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+            child: Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context)!;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                 CustomTextField(
-                  label: 'First Name',
-                  hint: 'Enter your first name',
+                  label: l10n.firstName,
+                  hint: l10n.hintFirstName,
                   controller: _firstNameController,
                   focusNode: _firstNameFocus,
                   textInputAction: TextInputAction.next,
                   onSubmitted: (_) => FocusScope.of(context).requestFocus(_lastNameFocus),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'First name is required';
+                      return l10n.validationFirstNameRequired;
                     }
-                    if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value)) {
-                      return 'Only alphabets are allowed';
+                    if (!validNamePattern.hasMatch(value)) {
+                      return l10n.validationOnlyAlphabets;
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 24.0),
                 CustomTextField(
-                  label: 'Last Name',
-                  hint: 'Enter your last name',
+                  label: l10n.lastName,
+                  hint: l10n.hintLastName,
                   controller: _lastNameController,
                   focusNode: _lastNameFocus,
                   textInputAction: TextInputAction.next,
                   onSubmitted: (_) => FocusScope.of(context).requestFocus(_aliasFocus),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Last name is required';
+                      return l10n.validationLastNameRequired;
                     }
-                    if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value)) {
-                      return 'Only alphabets are allowed';
+                    if (!validNamePattern.hasMatch(value)) {
+                      return l10n.validationOnlyAlphabets;
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 24.0),
                 CustomTextField(
-                  label: 'Alias Name',
-                  hint: 'Enter your alias name',
+                  label: l10n.aliasName,
+                  hint: l10n.hintAliasName,
                   controller: _aliasController,
                   isOptional: true,
                   focusNode: _aliasFocus,
                   textInputAction: TextInputAction.next,
                   onSubmitted: (_) => FocusScope.of(context).requestFocus(_address1Focus),
                   validator: (value) {
-                    if (value != null && value.isNotEmpty && !RegExp(r'^[a-zA-Z\s]+$').hasMatch(value)) {
-                      return 'Only alphabets are allowed';
+                    if (value != null && value.isNotEmpty && !validNamePattern.hasMatch(value)) {
+                      return l10n.validationOnlyAlphabets;
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 24.0),
                 CustomTextField(
-                  label: 'Address Line 1',
-                  hint: 'Street address, P.O. box, etc.',
+                  label: l10n.addressLine1,
+                  hint: l10n.hintAddressLine1,
                   controller: _address1Controller,
                   keyboardType: TextInputType.streetAddress,
                   focusNode: _address1Focus,
@@ -226,15 +229,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   onSubmitted: (_) => FocusScope.of(context).requestFocus(_address2Focus),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Address Line 1 is required';
+                      return l10n.validationAddressRequired;
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 24.0),
                 CustomTextField(
-                  label: 'Address Line 2',
-                  hint: 'Apartment, suite, unit, etc.',
+                  label: l10n.addressLine2,
+                  hint: l10n.hintAddressLine2,
                   controller: _address2Controller,
                   isOptional: true,
                   focusNode: _address2Focus,
@@ -243,18 +246,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
                 const SizedBox(height: 24.0),
                 CustomTextField(
-                  label: 'City',
-                  hint: 'Enter your city',
+                  label: l10n.city,
+                  hint: l10n.hintCity,
                   controller: _cityController,
                   focusNode: _cityFocus,
                   textInputAction: TextInputAction.next,
                   onSubmitted: (_) => FocusScope.of(context).requestFocus(_zipCodeFocus),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'City is required';
+                      return l10n.validationCityRequired;
                     }
-                    if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value)) {
-                      return 'Only alphabets are allowed';
+                    if (!validNamePattern.hasMatch(value)) {
+                      return l10n.validationOnlyAlphabets;
                     }
                     return null;
                   },
@@ -266,8 +269,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     Expanded(
                       flex: 1,
                       child: CustomTextField(
-                        label: 'Zip Code',
-                        hint: 'Zip Code',
+                        label: l10n.zipCode,
+                        hint: l10n.hintZipCode,
                         keyboardType: TextInputType.number,
                         controller: _zipCodeController,
                         focusNode: _zipCodeFocus,
@@ -275,10 +278,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         onSubmitted: (_) => FocusScope.of(context).requestFocus(_stateFocus),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Zip Code is required';
+                            return l10n.validationZipRequired;
                           }
                           if (!RegExp(r'^\d{5}$').hasMatch(value)) {
-                            return 'Enter a valid 5-digit Zip Code';
+                            return l10n.validationZip5Digits;
                           }
                           return null;
                         },
@@ -288,8 +291,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     Expanded(
                       flex: 1,
                       child: CustomDropdownField<String>(
-                        label: 'State',
-                        hint: 'Select State',
+                        label: l10n.state,
+                        hint: l10n.hintSelectState,
                         value: _normalizeState(_selectedState),
                         items: _states.map((String state) {
                           return DropdownMenuItem<String>(
@@ -303,18 +306,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           });
                         },
                         validator: (value) =>
-                            value == null ? 'Please select a state' : null,
+                            value == null ? l10n.pleaseSelectState : null,
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 40.0),
                 CustomButton(
-                  text: 'Save Changes',
+                  text: l10n.saveChanges,
                   onPressed: _handleUpdate,
                 ),
                 const SizedBox(height: 24.0),
               ],
+                );
+              },
             ),
           ),
         ),

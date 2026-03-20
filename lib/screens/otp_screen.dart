@@ -1,6 +1,7 @@
 import 'package:IamOkay/screens/biometric_setup_screen.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:IamOkay/l10n/app_localizations.dart';
 import 'dart:async';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config.dart';
@@ -267,21 +268,30 @@ class _OtpScreenState extends State<OtpScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        const Center(
-          child: Text(
-            'We have sent a one-time password to your mobile number.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 18.0,
-              fontWeight: FontWeight.w400,
-              color: Color(0xFF333333),
+        Center(
+          child: Builder(
+            builder: (context) => Text(
+              AppLocalizations.of(context)?.otpSentMessage ?? 'We have sent a one-time password to your mobile number.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 18.0,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF333333),
+              ),
             ),
           ),
         ),
         const SizedBox(height: 48),
+        Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
         CustomTextField(
-          label: 'OTP Code',
-          hint: 'Enter the 6-digit code',
+          label: l10n.otpCode,
+          hint: l10n.hintOtpCode,
           keyboardType: TextInputType.number,
           controller: _otpController,
           scrollPadding: Platform.isIOS
@@ -290,7 +300,7 @@ class _OtpScreenState extends State<OtpScreen> {
         ),
               const SizedBox(height: 32),
               CustomButton(
-                text: 'Verify & Login',
+                text: l10n.verifyAndLogin,
                 onPressed: _handleVerify,
               ),
               const SizedBox(height: 16),
@@ -298,7 +308,7 @@ class _OtpScreenState extends State<OtpScreen> {
                 child: GestureDetector(
                   onTap: _canResend ? _handleResendOtp : null,
                   child: Text(
-                    _canResend ? 'Resend Code' : 'Resend Code in ${_start}s',
+                    _canResend ? l10n.resendCode : l10n.resendCodeIn(_start),
                     style: TextStyle(
                       fontSize: 16.0,
                       fontWeight: FontWeight.w600,
@@ -307,6 +317,10 @@ class _OtpScreenState extends State<OtpScreen> {
                   ),
                 ),
               ),
+              ],
+            );
+          },
+        ),
         if (Platform.isIOS) const SizedBox(height: 32) else const SizedBox(height: 48),
       ],
     );

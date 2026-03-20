@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:IamOkay/l10n/app_localizations.dart';
 import '../config.dart';
 import '../constants/countries.dart';
 import '../widgets/custom_button.dart';
@@ -7,6 +8,7 @@ import '../widgets/custom_dropdown_field.dart';
 import '../widgets/loading_overlay.dart';
 import '../services/graphql_service.dart';
 import '../utils/phone_input_formatter.dart';
+import '../utils/name_validator.dart';
 import 'login_screen.dart';
 import 'otp_screen.dart';
 
@@ -110,9 +112,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     if (_selectedState == null) {
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a state'),
+        SnackBar(
+          content: Text(l10n?.pleaseSelectState ?? 'Please select a state'),
           backgroundColor: Colors.red,
         ),
       );
@@ -252,12 +255,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
           icon: const Icon(Icons.arrow_back, color: Color(0xFF000000)),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
-          'Register',
-          style: TextStyle(
-            fontSize: 26.0,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF000000),
+        title: Builder(
+          builder: (context) => Text(
+            AppLocalizations.of(context)?.register ?? 'Register',
+            style: const TextStyle(
+              fontSize: 26.0,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF000000),
+            ),
           ),
         ),
         centerTitle: true,
@@ -267,64 +272,67 @@ class _RegisterScreenState extends State<RegisterScreen> {
           padding: const EdgeInsets.all(24.0),
           child: Form(
             key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+            child: Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context)!;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                 CustomTextField(
-                  label: 'First Name',
-                  hint: 'Enter your first name',
+                  label: l10n.firstName,
+                  hint: l10n.hintFirstName,
                   controller: _firstNameController,
                   focusNode: _firstNameFocus,
                   textInputAction: TextInputAction.next,
                   onSubmitted: (_) => FocusScope.of(context).requestFocus(_lastNameFocus),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'First name is required';
+                      return l10n.validationFirstNameRequired;
                     }
-                    if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value)) {
-                      return 'Only alphabets are allowed';
+                    if (!validNamePattern.hasMatch(value)) {
+                      return l10n.validationOnlyAlphabets;
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 24.0),
                 CustomTextField(
-                  label: 'Last Name',
-                  hint: 'Enter your last name',
+                  label: l10n.lastName,
+                  hint: l10n.hintLastName,
                   controller: _lastNameController,
                   focusNode: _lastNameFocus,
                   textInputAction: TextInputAction.next,
                   onSubmitted: (_) => FocusScope.of(context).requestFocus(_aliasNameFocus),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Last name is required';
+                      return l10n.validationLastNameRequired;
                     }
-                    if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value)) {
-                      return 'Only alphabets are allowed';
+                    if (!validNamePattern.hasMatch(value)) {
+                      return l10n.validationOnlyAlphabets;
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 24.0),
                 CustomTextField(
-                  label: 'Alias Name',
-                  hint: 'Enter your alias name',
+                  label: l10n.aliasName,
+                  hint: l10n.hintAliasName,
                   controller: _aliasNameController,
                   isOptional: true,
                   focusNode: _aliasNameFocus,
                   textInputAction: TextInputAction.next,
                   onSubmitted: (_) => FocusScope.of(context).requestFocus(_mobileFocus),
                   validator: (value) {
-                    if (value != null && value.isNotEmpty && !RegExp(r'^[a-zA-Z\s]+$').hasMatch(value)) {
-                      return 'Only alphabets are allowed';
+                    if (value != null && value.isNotEmpty && !validNamePattern.hasMatch(value)) {
+                      return l10n.validationOnlyAlphabets;
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 24.0),
                 CustomDropdownField<CountryOption>(
-                  label: 'Country',
-                  hint: 'Select country',
+                  label: l10n.country,
+                  hint: l10n.hintSelectCountry,
                   value: _selectedCountry,
                   items: supportedCountries
                       .map((c) => DropdownMenuItem<CountryOption>(
@@ -338,8 +346,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 24.0),
                 CustomTextField(
-                  label: 'Mobile Number',
-                  hint: 'Enter your mobile number',
+                  label: l10n.mobileNumber,
+                  hint: l10n.hintMobileNumber,
                   keyboardType: TextInputType.phone,
                   controller: _mobileController,
                   inputFormatters: [PhoneInputFormatter()],
@@ -348,19 +356,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onSubmitted: (_) => FocusScope.of(context).requestFocus(_addressLine1Focus),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Mobile number is required';
+                      return l10n.validationMobileRequired;
                     }
                     final digits = value.replaceAll(RegExp(r'\D'), '');
-                    if (digits.length != 10) {
-                      return 'Enter a valid 10-digit mobile number';
+                    if (digits.length < 8 || digits.length > 12) {
+                      return l10n.validationMobile10Digits;
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 24.0),
                 CustomTextField(
-                  label: 'Address Line 1',
-                  hint: 'Street address, P.O. box, etc.',
+                  label: l10n.addressLine1,
+                  hint: l10n.hintAddressLine1,
                   controller: _addressLine1Controller,
                   keyboardType: TextInputType.streetAddress,
                   focusNode: _addressLine1Focus,
@@ -368,15 +376,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onSubmitted: (_) => FocusScope.of(context).requestFocus(_addressLine2Focus),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Address Line 1 is required';
+                      return l10n.validationAddressRequired;
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 24.0),
                 CustomTextField(
-                  label: 'Address Line 2',
-                  hint: 'Apartment, suite, unit, etc.',
+                  label: l10n.addressLine2,
+                  hint: l10n.hintAddressLine2,
                   controller: _addressLine2Controller,
                   isOptional: true,
                   focusNode: _addressLine2Focus,
@@ -385,18 +393,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 24.0),
                 CustomTextField(
-                  label: 'City',
-                  hint: 'Enter your city',
+                  label: l10n.city,
+                  hint: l10n.hintCity,
                   controller: _cityController,
                   focusNode: _cityFocus,
                   textInputAction: TextInputAction.next,
                   onSubmitted: (_) => FocusScope.of(context).requestFocus(_zipCodeFocus),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'City is required';
+                      return l10n.validationCityRequired;
                     }
-                    if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value)) {
-                      return 'Only alphabets are allowed';
+                    if (!validNamePattern.hasMatch(value)) {
+                      return l10n.validationOnlyAlphabets;
                     }
                     return null;
                   },
@@ -408,8 +416,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Expanded(
                       flex: 1,
                       child: CustomTextField(
-                        label: 'Zip Code',
-                        hint: 'Zip Code',
+                        label: l10n.zipCode,
+                        hint: l10n.hintZipCode,
                         keyboardType: TextInputType.number,
                         controller: _zipCodeController,
                         focusNode: _zipCodeFocus,
@@ -417,10 +425,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         onSubmitted: (_) => FocusScope.of(context).requestFocus(_emailFocus),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Zip Code is required';
+                            return l10n.validationZipRequired;
                           }
                           if (!RegExp(r'^\d{5}$').hasMatch(value)) {
-                            return 'Enter a valid 5-digit Zip Code';
+                            return l10n.validationZip5Digits;
                           }
                           return null;
                         },
@@ -430,8 +438,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Expanded(
                       flex: 1,
                       child: CustomDropdownField<String>(
-                        label: 'State',
-                        hint: 'Select State',
+                        label: l10n.state,
+                        hint: l10n.hintSelectState,
                         value: _selectedState,
                         items: _states.map((String state) {
                           return DropdownMenuItem<String>(
@@ -450,8 +458,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 24.0),
                 CustomTextField(
-                  label: 'Email',
-                  hint: 'Enter your email address',
+                  label: l10n.email,
+                  hint: l10n.hintEmail,
                   keyboardType: TextInputType.emailAddress,
                   controller: _emailController,
                   isOptional: true,
@@ -474,6 +482,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 24.0),
               ],
+                );
+              },
             ),
           ),
         ),

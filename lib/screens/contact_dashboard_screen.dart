@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/user_model.dart';
 import '../services/graphql_service.dart';
+import '../utils/api_error_handler.dart';
 import '../utils/phone_display_helper.dart';
 import '../services/notification_service.dart';
 import 'landing_screen.dart';
@@ -56,9 +57,7 @@ class _ContactDashboardScreenState extends State<ContactDashboardScreen> {
         setState(() {
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading data: $e')),
-        );
+        await ApiErrorHandler.handle(context, e);
       }
     }
   }

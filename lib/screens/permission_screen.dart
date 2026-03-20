@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:IamOkay/l10n/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -59,6 +61,25 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
     }
   }
 
+  Future<void> _openFullScreenIntentSettings() async {
+    try {
+      final androidPlugin = NotificationService()
+          .flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      if (androidPlugin != null) {
+        await androidPlugin.requestFullScreenIntentPermission();
+      } else {
+        await _fullScreenIntentChannel.invokeMethod<void>('openSettings');
+      }
+      if (mounted) setState(() => _fullScreenIntentRequested = true);
+    } catch (_) {
+      try {
+        await _fullScreenIntentChannel.invokeMethod<void>('openSettings');
+      } catch (_) {}
+    }
+  }
+
   Future<void> _checkPermissions() async {
     final locationStatus = await Permission.locationWhenInUse.status;
     final exactAlarmStatus = Platform.isAndroid 
@@ -113,12 +134,9 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
       }
     }
 
-    // Open Full-screen intent settings (Android 12+)
+    // Full-screen intent: request permission (Android 14+ opens settings if needed)
     if (Platform.isAndroid) {
-      try {
-        await _fullScreenIntentChannel.invokeMethod<void>('openSettings');
-        if (mounted) setState(() => _fullScreenIntentRequested = true);
-      } catch (_) {}
+      await _openFullScreenIntentSettings();
     }
 
     await _checkPermissions();
@@ -182,8 +200,8 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
                 ),
               ),
               const SizedBox(height: 24),
-              const Text(
-                'Permissions Required',
+              Text(
+                AppLocalizations.of(context)!.permissionsRequired,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 26.0,
@@ -192,8 +210,8 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
                 ),
               ),
               const SizedBox(height: 10),
-              const Text(
-                'To ensure your safety and provide the best experience, we need access to the following permissions:',
+              Text(
+                AppLocalizations.of(context)!.permissionsRequiredDescription,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 15.0,
@@ -209,16 +227,16 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
               // Notification Permission Item
               _buildPermissionItem(
                 icon: Icons.notifications_active_outlined,
-                title: 'Notifications',
-                description: 'To remind you to check in daily and ensure you are okay.',
+                title: AppLocalizations.of(context)!.notifications,
+                description: AppLocalizations.of(context)!.notificationsDescription,
                 isGranted: _notificationGranted,
               ),
               const SizedBox(height: 20),
               // Location Permission Item
               _buildPermissionItem(
                 icon: Icons.location_on_outlined,
-                title: 'Location (Optional)',
-                description: 'To include your current location in emergency alerts sent to your contacts.',
+                title: AppLocalizations.of(context)!.locationOptional,
+                description: AppLocalizations.of(context)!.locationDescription,
                 isGranted: _locationGranted,
               ),
 
@@ -227,24 +245,18 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
                 // Exact Alarm Permission Item
                 _buildPermissionItem(
                   icon: Icons.alarm,
-                  title: 'Alarms',
-                  description: 'To schedule precise reminders and safety checks.',
+                  title: AppLocalizations.of(context)!.alarms,
+                  description: AppLocalizations.of(context)!.alarmsDescription,
                   isGranted: _exactAlarmGranted,
                 ),
                 const SizedBox(height: 20),
                 // Full-screen intent Permission Item (tap to open settings)
                 GestureDetector(
-                  onTap: () async {
-                    try {
-                      await _fullScreenIntentChannel.invokeMethod<void>('openSettings');
-                      if (mounted) setState(() => _fullScreenIntentRequested = true);
-                    } catch (_) {}
-                  },
+                  onTap: _openFullScreenIntentSettings,
                   child: _buildPermissionItem(
                     icon: Icons.fullscreen,
-                    title: 'Full-screen intent',
-                    description:
-                        'To open the app when the alarm rings on the lock screen. Tap to enable in Settings.',
+                    title: AppLocalizations.of(context)!.fullScreenIntent,
+                    description: AppLocalizations.of(context)!.fullScreenIntentDescription,
                     isGranted: _fullScreenIntentRequested,
                   ),
                 ),
@@ -256,22 +268,22 @@ class _PermissionScreenState extends State<PermissionScreen> with WidgetsBinding
               const SizedBox(height: 16),
               if (!_allRequiredPermissionsGranted)
                 CustomButton(
-                  text: 'Grant Permissions',
+                  text: AppLocalizations.of(context)!.grantPermissions,
                   onPressed: _requestPermissions,
                 ),
               
               const SizedBox(height: 16),
               
               CustomButton(
-                text: 'Continue',
+                text: AppLocalizations.of(context)!.continueButton,
                 onPressed: () {
                   // Always allow continue: on iOS notification status can be wrong
                   // even when permission was granted; don't block the user
                   if (!_allRequiredPermissionsGranted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
+                      SnackBar(
                         content: Text(
-                          'You can enable permissions later in Settings if needed.',
+                          AppLocalizations.of(context)!.enablePermissionsLater,
                         ),
                         duration: Duration(seconds: 2),
                       ),
