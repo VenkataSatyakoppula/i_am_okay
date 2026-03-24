@@ -87,18 +87,12 @@ class NotificationService {
 
   void _onNotificationResponse(NotificationResponse response) {
     if (response.actionId == _kDismissActionId) {
-      stopIosAlarmLoop();
       _dismissAlarmNotification(response.id);
       runCheckInFromDismiss(response.payload).then((success) {
         onCheckInFromDismiss?.call(success);
       });
-    } else {
-      if (isAlarmPayload(response.payload)) {
-        startIosAlarmLoop();
-      }
-      if (response.actionId == _kOpenAppActionId) {
-        onOpenAppFromNotification?.call();
-      }
+    } else if (response.actionId == _kOpenAppActionId) {
+      onOpenAppFromNotification?.call();
     }
   }
 
@@ -161,23 +155,6 @@ class NotificationService {
   static const String _kAlarmNotificationTag = 'daily_checkin_alarm';
   static const MethodChannel _platformChannel =
       MethodChannel('com.infodat.iamokay/full_screen_intent');
-  static const MethodChannel _iosAlarmAudioChannel =
-      MethodChannel('com.infodat.iamokay/ios_alarm_audio');
-
-  /// iOS: loops [preview.caf] for 60s (notification API cannot loop past ~30s).
-  static Future<void> startIosAlarmLoop() async {
-    if (!Platform.isIOS) return;
-    try {
-      await _iosAlarmAudioChannel.invokeMethod<void>('startLoopingAlarm');
-    } catch (_) {}
-  }
-
-  static Future<void> stopIosAlarmLoop() async {
-    if (!Platform.isIOS) return;
-    try {
-      await _iosAlarmAudioChannel.invokeMethod<void>('stopLoopingAlarm');
-    } catch (_) {}
-  }
   static String? _cachedAlarmUri;
   static bool _alarmUriTried = false;
 
@@ -324,7 +301,7 @@ class NotificationService {
         // Strong alarm pattern: vibrate 800ms, pause 400ms, repeated for ~1 min (matches alarm ring duration)
         vibrationPattern: _alarmVibrationPattern(),
       ),
-      // iOS: bundled preview.caf for background delivery (max ~30s); foreground uses AlarmLoopController 60s loop.
+      // iOS: custom alarm sound must be .caf/.aiff/.wav in Runner bundle, max 30 sec. Add preview.caf to Xcode Runner target Resources.
       iOS: const DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,
@@ -439,7 +416,6 @@ class NotificationService {
 
     if (inPreReminderWindow) {
       // 11:00–11:05: cancel local notifications FIRST so the pending follow-up reminder is removed immediately (before it can fire).
-      await stopIosAlarmLoop();
       await flutterLocalNotificationsPlugin.cancelAll();
     }
 
@@ -467,7 +443,6 @@ class NotificationService {
   }
 
   Future<void> cancelAllNotifications() async {
-    await stopIosAlarmLoop();
     await flutterLocalNotificationsPlugin.cancelAll();
     try {
       await GraphQLService.clearEmergencySmsTasks();

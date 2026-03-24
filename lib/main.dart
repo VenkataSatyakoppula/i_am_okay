@@ -64,11 +64,6 @@ void main() async {
         initialResponse.actionId == 'open_app' ||
         NotificationService.isAlarmPayload(initialResponse.payload);
     if (shouldOpenHome) {
-      if (initialResponse != null &&
-          initialResponse.actionId != 'dismiss' &&
-          NotificationService.isAlarmPayload(initialResponse.payload)) {
-        await NotificationService.startIosAlarmLoop();
-      }
       // Open HomeScreen when alarm rings (full-screen intent) or notification tap
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final context = rootNavigatorKey.currentContext;
