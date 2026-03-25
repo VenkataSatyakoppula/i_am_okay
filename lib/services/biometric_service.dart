@@ -11,7 +11,7 @@ class BiometricService {
       final bool canAuthenticate =
           canAuthenticateWithBiometrics || isDeviceSupported;
       return canAuthenticate;
-    } on PlatformException catch (e) {
+    } on PlatformException {
       return false;
     }
   }
@@ -23,7 +23,7 @@ class BiometricService {
         persistAcrossBackgrounding: true,
         biometricOnly: false,
       );
-    } on PlatformException catch (e) {
+    } on PlatformException {
       return false;
     }
   }

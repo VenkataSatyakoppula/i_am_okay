@@ -150,20 +150,23 @@ class _OtpScreenState extends State<OtpScreen> {
         LoadingOverlay.hide(context);
 
         if (widget.role == 'contact') {
-              final biometricEnabled = await _storage.read(key: 'biometric_enabled');
-
+          final biometricEnabled =
+              await _storage.read(key: 'biometric_enabled');
+          if (!mounted) return;
           if (biometricEnabled != null && biometricEnabled == 'true') {
-              Navigator.pushAndRemoveUntil(
+            Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(
-                  builder: (context) => const EmergencyContactDashboard()),
+                builder: (context) => const EmergencyContactDashboard(),
+              ),
               (route) => false,
             );
-          }else{
-              Navigator.pushAndRemoveUntil(
+          } else {
+            Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(
-                  builder: (context) => const BiometricSetupScreen()),
+                builder: (context) => const BiometricSetupScreen(),
+              ),
               (route) => false,
             );
           }

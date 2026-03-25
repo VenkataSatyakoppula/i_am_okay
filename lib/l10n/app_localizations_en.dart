@@ -729,6 +729,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Ringing alarm for daily check-in with sound and vibration';
 
   @override
+  String get notificationAlarmStopButton => 'Dismiss';
+
+  @override
   String get notificationChannelName => 'Daily Check-in';
 
   @override

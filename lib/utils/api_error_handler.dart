@@ -1,7 +1,6 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:IamOkay/l10n/app_localizations.dart';
 import '../screens/landing_screen.dart';
 import '../services/graphql_service.dart';
@@ -17,6 +16,7 @@ class ApiErrorHandler {
     if (!context.mounted) return;
 
     final hasInternet = await _checkConnectivity();
+    if (!context.mounted) return;
     if (!hasInternet) {
       final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -29,6 +29,7 @@ class ApiErrorHandler {
       return;
     }
 
+    if (!context.mounted) return;
     // Has internet but API failed - prompt re-login
     await _showReLoginDialog(context);
   }

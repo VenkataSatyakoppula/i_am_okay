@@ -740,6 +740,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'Alarme sonore pour le pointage quotidien avec son et vibration';
 
   @override
+  String get notificationAlarmStopButton => 'Arrêter';
+
+  @override
   String get notificationChannelName => 'Pointage quotidien';
 
   @override

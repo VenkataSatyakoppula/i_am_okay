@@ -295,6 +295,7 @@
   "notificationCheckInReminderBody": "You haven't checked in yet. Is everything okay?",
   "notificationAlarmChannelName": "Daily Check-in Alarm",
   "notificationAlarmChannelDesc": "Ringing alarm for daily check-in with sound and vibration",
+  "notificationAlarmStopButton": "Dismiss",
   "notificationChannelName": "Daily Check-in",
   "notificationChannelDesc": "Reminds you to check in daily",
   "userNotIdentifiedPleaseLogin": "User not identified. Please log in again.",

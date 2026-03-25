@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:alarm/alarm.dart';
+import 'package:alarm/utils/alarm_set.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -31,8 +34,17 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
+  /// `alarm` package disallows id 0 / -1. Logical notification ids 0–14 and 100–114 map to 1–15 and 101–115.
+  static int iosAlarmIdFromLogicalNotificationId(int logicalNotificationId) =>
+      logicalNotificationId + 1;
+
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
+
+  static final Map<int, String> _iosAlarmPayloadCache = {};
+
+  StreamSubscription<AlarmSet>? _iosRingingSubscription;
+  Set<int> _iosPreviousRingingAlarmIds = {};
 
   /// Called when user taps Dismiss on the alarm notification (optional, for showing snackbar).
   static void Function(bool success)? onCheckInFromDismiss;
@@ -83,6 +95,28 @@ class NotificationService {
       onDidReceiveNotificationResponse: _onNotificationResponse,
       onDidReceiveBackgroundNotificationResponse: onBackgroundNotificationResponse,
     );
+
+    if (Platform.isIOS) {
+      await _iosRingingSubscription?.cancel();
+      _iosPreviousRingingAlarmIds =
+          Alarm.ringing.value.alarms.map((a) => a.id).toSet();
+      _iosRingingSubscription = Alarm.ringing.listen(_onIosRingingChanged);
+    }
+  }
+
+  void _onIosRingingChanged(AlarmSet current) {
+    final currIds = current.alarms.map((a) => a.id).toSet();
+    for (final id in _iosPreviousRingingAlarmIds) {
+      if (!currIds.contains(id)) {
+        final payload = _iosAlarmPayloadCache.remove(id);
+        if (payload != null && payload.isNotEmpty) {
+          runCheckInFromDismiss(payload).then((success) {
+            onCheckInFromDismiss?.call(success);
+          });
+        }
+      }
+    }
+    _iosPreviousRingingAlarmIds = currIds;
   }
 
   void _onNotificationResponse(NotificationResponse response) {
@@ -110,6 +144,12 @@ class NotificationService {
 
   Future<void> _cancelAlarmNotification(int notificationId) async {
     try {
+      if (Platform.isIOS) {
+        final alarmId = iosAlarmIdFromLogicalNotificationId(notificationId);
+        _iosAlarmPayloadCache.remove(alarmId);
+        await Alarm.stop(alarmId);
+        return;
+      }
       if (Platform.isAndroid) {
         await flutterLocalNotificationsPlugin.cancel(
           id: notificationId,
@@ -120,7 +160,9 @@ class NotificationService {
       }
     } catch (_) {
       try {
-        await flutterLocalNotificationsPlugin.cancel(id: notificationId);
+        if (!Platform.isIOS) {
+          await flutterLocalNotificationsPlugin.cancel(id: notificationId);
+        }
       } catch (_) {}
     }
   }
@@ -140,9 +182,7 @@ class NotificationService {
           checkInTime = CheckInService.parseCheckInTimeFromReminderScheduledDate(scheduledDate);
         }
       }
-      if (checkInTime == null) {
-        checkInTime = await CheckInService.getCheckInTimeFromUser();
-      }
+      checkInTime ??= await CheckInService.getCheckInTimeFromUser();
       return await CheckInService.performCheckIn(checkInTime);
     } catch (_) {
       return false;
@@ -249,7 +289,7 @@ class NotificationService {
       final startDateIso = '${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}T00:00:00Z';
       await GraphQLService.scheduleEmergencySmsTasks(
         days: 7,
-        timeZone: timeZoneInfo.identifier ?? 'UTC',
+        timeZone: timeZoneInfo.identifier,
         checkInOffset: AppConfig.emergencySmsDelayMinutes,
         startDate: startDateIso,
       );
@@ -329,8 +369,62 @@ class NotificationService {
     );
   }
 
+  Future<void> _scheduleIosAlarms(
+    tz.TZDateTime startDate,
+    int startId,
+    String type,
+    String title,
+    String body,
+  ) async {
+    try {
+      final l10n = await _getLocalizations();
+      for (int i = 0; i < _scheduleDaysAhead; i++) {
+        final tz.TZDateTime notificationDate = startDate.add(Duration(days: i));
+        final payload = jsonEncode({
+          'type': type,
+          'scheduledDate': notificationDate.toIso8601String(),
+        });
+        final logicalId = startId + i;
+        final iosAlarmId = iosAlarmIdFromLogicalNotificationId(logicalId);
+        _iosAlarmPayloadCache[iosAlarmId] = payload;
+        final dateTime = DateTime(
+          notificationDate.year,
+          notificationDate.month,
+          notificationDate.day,
+          notificationDate.hour,
+          notificationDate.minute,
+          notificationDate.second,
+        );
+        final settings = AlarmSettings(
+          id: iosAlarmId,
+          dateTime: dateTime,
+          assetAudioPath: 'assets/sounds/preview.mp3',
+          volumeSettings:
+              const VolumeSettings.fixed(volume: 1.0, volumeEnforced: true),
+          notificationSettings: NotificationSettings(
+            title: title,
+            body: body,
+            stopButton: l10n.notificationAlarmStopButton,
+          ),
+          loopAudio: true,
+          vibrate: true,
+          warningNotificationOnKill: true,
+          iOSBackgroundAudio: true,
+          payload: payload,
+        );
+        await Alarm.set(alarmSettings: settings);
+      }
+    } catch (e) {
+      debugPrint('Error scheduling iOS alarms for $type: $e');
+    }
+  }
+
   Future<void> _scheduleNotifications(tz.TZDateTime startDate, int startId, String type, String title, String body) async {
     try {
+      if (Platform.isIOS) {
+        await _scheduleIosAlarms(startDate, startId, type, title, body);
+        return;
+      }
       final l10n = await _getLocalizations();
       // Fetch system alarm URI once (Android) for ringing alarm sound
       if ((type == 'daily_checkin' || type == 'checkin_reminder') &&
@@ -415,8 +509,13 @@ class NotificationService {
     final bool inPreReminderWindow = now.isBefore(reminderTime);
 
     if (inPreReminderWindow) {
-      // 11:00–11:05: cancel local notifications FIRST so the pending follow-up reminder is removed immediately (before it can fire).
-      await flutterLocalNotificationsPlugin.cancelAll();
+      // 11:00–11:05: cancel alarms / local notifications FIRST so the pending follow-up reminder is removed immediately (before it can fire).
+      if (Platform.isIOS) {
+        _iosAlarmPayloadCache.clear();
+        await Alarm.stopAll();
+      } else {
+        await flutterLocalNotificationsPlugin.cancelAll();
+      }
     }
 
     try {
@@ -424,7 +523,7 @@ class NotificationService {
       final timeZoneInfo = await FlutterTimezone.getLocalTimezone();
       await GraphQLService.scheduleEmergencySmsTasks(
         days: 7,
-        timeZone: timeZoneInfo.identifier ?? 'UTC',
+        timeZone: timeZoneInfo.identifier,
         checkInOffset: AppConfig.emergencySmsDelayMinutes,
         startDate: startDateIso,
       );
@@ -443,6 +542,10 @@ class NotificationService {
   }
 
   Future<void> cancelAllNotifications() async {
+    if (Platform.isIOS) {
+      _iosAlarmPayloadCache.clear();
+      await Alarm.stopAll();
+    }
     await flutterLocalNotificationsPlugin.cancelAll();
     try {
       await GraphQLService.clearEmergencySmsTasks();

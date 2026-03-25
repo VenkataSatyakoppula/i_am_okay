@@ -155,8 +155,6 @@ class _HomeContentState extends State<HomeContent>
   DateTime? _pausedUntil;
   /// Prevents showing placeholder header until cache has been read.
   bool _hasInitialLoad = false;
-  /// Last check-in date (yyyy-MM-dd). Used for optimistic UI after check-in.
-  String? _lastCheckInDate;
   /// True when the server has a check-in record for today. Success state requires this.
   bool _hasCheckInTodayFromServer = false;
   Timer? _countdownTimer;
@@ -196,13 +194,11 @@ class _HomeContentState extends State<HomeContent>
 
   Future<void> _fetchUserData() async {
     try {
-      final lastCheckIn = await _storage.read(key: 'last_check_in_date');
       // Show cached user immediately so no placeholder flash when navigating to Home
       final cachedUser = await GraphQLService.getCachedUser();
       if (mounted) {
         setState(() {
           _hasInitialLoad = true;
-          _lastCheckInDate = lastCheckIn;
           if (cachedUser != null) {
             _applyUserToState(cachedUser);
           }
@@ -388,7 +384,6 @@ class _HomeContentState extends State<HomeContent>
       LoadingOverlay.hide(context);
       if (success) {
         setState(() {
-          _lastCheckInDate = CheckInService.todayDateString();
           _hasCheckInTodayFromServer = true;
         });
       }
@@ -543,6 +538,7 @@ class _HomeContentState extends State<HomeContent>
           }
         }
 
+        if (!mounted) return;
         final l10n = AppLocalizations.of(context)!;
         final String message;
         if (isPaused) {
@@ -559,8 +555,9 @@ class _HomeContentState extends State<HomeContent>
     } catch (e) {
       if (mounted) {
         LoadingOverlay.hide(context);
-        await ApiErrorHandler.handle(context, e);
       }
+      if (!mounted) return;
+      await ApiErrorHandler.handle(context, e);
     }
   }
 
@@ -709,7 +706,6 @@ class _HomeContentState extends State<HomeContent>
         child: _buildButtonContainer(
           color: Colors.white,
           borderColor: Colors.grey.shade300,
-          showRipples: false,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -930,8 +926,6 @@ class _HomeContentState extends State<HomeContent>
     required Widget child,
     required Color color,
     Color? borderColor,
-    bool showRipples = true,
-    VoidCallback? onTap,
   }) {
     return Container(
       width: 200,

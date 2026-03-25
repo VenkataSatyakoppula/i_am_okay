@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:IamOkay/l10n/app_localizations.dart';
-import '../config.dart';
 import '../constants/countries.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';

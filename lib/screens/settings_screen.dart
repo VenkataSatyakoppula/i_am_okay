@@ -189,7 +189,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         if (hasAlias) ...[
           const SizedBox(height: 4),
           Text(
-            alias!,
+            alias,
             style: const TextStyle(
               fontSize: 16.0,
               fontWeight: FontWeight.w500,

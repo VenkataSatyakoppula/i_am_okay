@@ -269,43 +269,35 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
         'emergencyContacts': contactsToUpdate,
       });
 
-      if (mounted && showSuccessMessage) {
-        final scaffoldContext = _scaffoldKey.currentContext;
-        if (scaffoldContext != null) {
-          ScaffoldMessenger.of(scaffoldContext).clearSnackBars();
-          ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+      if (!mounted || !showSuccessMessage) return;
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Contacts updated successfully'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      if (e is OperationException && e.graphqlErrors.isNotEmpty) {
+        final errMsg = e.graphqlErrors.first.message;
+        if (errMsg.contains('CHANNEL_REQUIRED') ||
+            errMsg.contains('at least one channel')) {
+          ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Contacts updated successfully'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
+              content: Text(
+                'Each emergency contact must have at least one channel (SMS or WhatsApp) selected.',
+              ),
+              backgroundColor: Colors.red,
               behavior: SnackBarBehavior.floating,
             ),
           );
+          return;
         }
       }
-    } catch (e, stackTrace) {
-      if (mounted) {
-        final scaffoldContext = _scaffoldKey.currentContext;
-        if (scaffoldContext != null) {
-          if (e is OperationException && e.graphqlErrors.isNotEmpty) {
-            final errMsg = e.graphqlErrors.first.message;
-            if (errMsg.contains('CHANNEL_REQUIRED') ||
-                errMsg.contains('at least one channel')) {
-              ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'Each emergency contact must have at least one channel (SMS or WhatsApp) selected.',
-                  ),
-                  backgroundColor: Colors.red,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-              return;
-            }
-          }
-          await ApiErrorHandler.handle(scaffoldContext, e);
-        }
-      }
+      await ApiErrorHandler.handle(context, e);
     }
   }
 

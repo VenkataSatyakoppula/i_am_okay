@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:alarm/alarm.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -5,7 +8,6 @@ import 'package:IamOkay/l10n/app_localizations.dart';
 import 'screens/home_screen.dart';
 import 'screens/landing_screen.dart';
 import 'screens/language_selection_screen.dart';
-import 'services/check_in_service.dart';
 import 'services/notification_service.dart';
 import 'providers/locale_provider.dart';
 
@@ -15,6 +17,7 @@ final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Alarm.init();
   NotificationService.onCheckInFromDismiss = (bool success) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final context = rootNavigatorKey.currentContext;
@@ -46,35 +49,46 @@ void main() async {
   };
   await NotificationService().init();
 
-  // Handle app opened from alarm (full-screen intent or notification tap)
-  final launchDetails = await NotificationService().flutterLocalNotificationsPlugin
-      .getNotificationAppLaunchDetails();
-  final launchedByNotification = launchDetails?.didNotificationLaunchApp ?? false;
-  final initialResponse = launchDetails?.notificationResponse;
+  if (Platform.isAndroid) {
+    // Handle app opened from alarm (full-screen intent or notification tap)
+    final launchDetails = await NotificationService().flutterLocalNotificationsPlugin
+        .getNotificationAppLaunchDetails();
+    final launchedByNotification = launchDetails?.didNotificationLaunchApp ?? false;
+    final initialResponse = launchDetails?.notificationResponse;
 
-  if (launchedByNotification) {
-    if (initialResponse != null && initialResponse.actionId == 'dismiss') {
-      await NotificationService.dismissAlarmNotification(initialResponse.id);
-      final success = await NotificationService.runCheckInFromDismiss(
-        initialResponse.payload,
-      );
-      NotificationService.onCheckInFromDismiss?.call(success);
+    if (launchedByNotification) {
+      if (initialResponse != null && initialResponse.actionId == 'dismiss') {
+        await NotificationService.dismissAlarmNotification(initialResponse.id);
+        final success = await NotificationService.runCheckInFromDismiss(
+          initialResponse.payload,
+        );
+        NotificationService.onCheckInFromDismiss?.call(success);
+      }
+      final shouldOpenHome = initialResponse == null ||
+          initialResponse.actionId == 'open_app' ||
+          NotificationService.isAlarmPayload(initialResponse.payload);
+      if (shouldOpenHome) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final context = rootNavigatorKey.currentContext;
+          if (context != null && context.mounted) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const HomeScreen()),
+              (route) => false,
+            );
+          }
+        });
+      }
     }
-    final shouldOpenHome = initialResponse == null ||
-        initialResponse.actionId == 'open_app' ||
-        NotificationService.isAlarmPayload(initialResponse.payload);
-    if (shouldOpenHome) {
-      // Open HomeScreen when alarm rings (full-screen intent) or notification tap
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final context = rootNavigatorKey.currentContext;
-        if (context != null && context.mounted) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const HomeScreen()),
-            (route) => false,
-          );
-        }
-      });
-    }
+  } else if (Platform.isIOS && await Alarm.isRinging()) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = rootNavigatorKey.currentContext;
+      if (context != null && context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          (route) => false,
+        );
+      }
+    });
   }
 
   // Set preferred orientations

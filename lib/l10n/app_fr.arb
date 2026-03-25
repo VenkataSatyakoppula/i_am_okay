@@ -295,6 +295,7 @@
   "notificationCheckInReminderBody": "Vous ne vous êtes pas encore connecté. Tout va bien ?",
   "notificationAlarmChannelName": "Alarme de pointage quotidien",
   "notificationAlarmChannelDesc": "Alarme sonore pour le pointage quotidien avec son et vibration",
+  "notificationAlarmStopButton": "Arrêter",
   "notificationChannelName": "Pointage quotidien",
   "notificationChannelDesc": "Vous rappelle de vous connecter quotidiennement",
   "userNotIdentifiedPleaseLogin": "Utilisateur non identifié. Veuillez vous reconnecter.",

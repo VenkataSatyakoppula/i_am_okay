@@ -1406,6 +1406,12 @@ abstract class AppLocalizations {
   /// **'Ringing alarm for daily check-in with sound and vibration'**
   String get notificationAlarmChannelDesc;
 
+  /// No description provided for @notificationAlarmStopButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get notificationAlarmStopButton;
+
   /// No description provided for @notificationChannelName.
   ///
   /// In en, this message translates to:

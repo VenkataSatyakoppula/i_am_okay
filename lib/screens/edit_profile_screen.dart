@@ -22,7 +22,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _firstNameController;
   late TextEditingController _lastNameController;
-  late TextEditingController _aliasController = TextEditingController();
+  final _aliasController = TextEditingController();
   late TextEditingController _address1Controller;
   late TextEditingController _address2Controller;
   late TextEditingController _cityController;

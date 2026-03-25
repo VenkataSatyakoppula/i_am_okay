@@ -1,13 +1,13 @@
 // ignore_for_file: avoid_print
 
-/// Script to translate app_en.arb to app_fr.arb using Google Cloud Translation API v2.
-///
-/// Prerequisites:
-/// 1. Enable Cloud Translation API in your Google Cloud project
-/// 2. Create an API key at https://console.cloud.google.com/apis/credentials
-/// 3. Set environment variable: GOOGLE_CLOUD_TRANSLATION_API_KEY=your_api_key
-///
-/// Run: dart run scripts/translate_arb.dart
+// Script to translate app_en.arb to app_fr.arb using Google Cloud Translation API v2.
+//
+// Prerequisites:
+// 1. Enable Cloud Translation API in your Google Cloud project
+// 2. Create an API key at https://console.cloud.google.com/apis/credentials
+// 3. Set environment variable: GOOGLE_CLOUD_TRANSLATION_API_KEY=your_api_key
+//
+// Run: dart run scripts/translate_arb.dart
 
 import 'dart:convert';
 import 'dart:io';
