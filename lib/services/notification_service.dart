@@ -406,7 +406,8 @@ class NotificationService {
             body: body,
             stopButton: l10n.notificationAlarmStopButton,
           ),
-          loopAudio: true,
+          // One play then native stop; Dart timers don't run when iOS is backgrounded.
+          loopAudio: false,
           vibrate: true,
           warningNotificationOnKill: true,
           iOSBackgroundAudio: true,
