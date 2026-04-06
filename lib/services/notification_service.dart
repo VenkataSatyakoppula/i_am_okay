@@ -108,12 +108,10 @@ class NotificationService {
     final currIds = current.alarms.map((a) => a.id).toSet();
     for (final id in _iosPreviousRingingAlarmIds) {
       if (!currIds.contains(id)) {
-        final payload = _iosAlarmPayloadCache.remove(id);
-        if (payload != null && payload.isNotEmpty) {
-          runCheckInFromDismiss(payload).then((success) {
-            onCheckInFromDismiss?.call(success);
-          });
-        }
+        // Do not check in here: this runs for *any* stop (audio finished, kill, etc.).
+        // Check-in only when the user taps Dismiss (see _onNotificationResponse /
+        // onBackgroundNotificationResponse).
+        _iosAlarmPayloadCache.remove(id);
       }
     }
     _iosPreviousRingingAlarmIds = currIds;
