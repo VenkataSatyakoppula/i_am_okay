@@ -1,6 +1,6 @@
 class AppConfig {
   // TODO: Update this URL with current tunnel URL
-  static const String apiUrl = 'https://amok.dev.selltis.com/graphql';
+  static const String apiUrl = 'http://10.0.2.2:5200/graphql';
 
   // Notification Settings
   static const int followUpReminderDelayMinutes = 10;

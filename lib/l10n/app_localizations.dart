@@ -461,7 +461,7 @@ abstract class AppLocalizations {
   /// No description provided for @pleaseSelectState.
   ///
   /// In en, this message translates to:
-  /// **'Please select a state'**
+  /// **'State is required'**
   String get pleaseSelectState;
 
   /// No description provided for @profileUpdatedSuccessfully.
@@ -623,7 +623,7 @@ abstract class AppLocalizations {
   /// No description provided for @hintSelectState.
   ///
   /// In en, this message translates to:
-  /// **'Select State'**
+  /// **'Enter state or region'**
   String get hintSelectState;
 
   /// No description provided for @hintEmail.

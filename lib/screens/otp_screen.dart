@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:IamOkay/l10n/app_localizations.dart';
 import 'dart:async';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:provider/provider.dart';
 import '../config.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/loading_overlay.dart';
 import '../services/graphql_service.dart';
+import '../providers/locale_provider.dart';
 import 'emergency_contact_screen.dart';
 import 'emergency_contact_dashboard.dart';
 import 'daily_reminder_screen.dart';
@@ -141,6 +143,11 @@ class _OtpScreenState extends State<OtpScreen> {
       if (user != null) {
         await _storage.write(key: 'user_id', value: user.id);
         await GraphQLService.saveUserToCache(user);
+        if (mounted) {
+          await context
+              .read<LocaleProvider>()
+              .applyFromUserPreferredLanguage(user.preferredLanguage);
+        }
       }
       if (widget.role != null) {
         await _storage.write(key: 'user_role', value: widget.role);

@@ -8,10 +8,14 @@ class LanguageDropdown extends StatelessWidget {
   /// Optional icon color. If null, uses AppBar foreground or white.
   final Color? iconColor;
 
+  /// When set (e.g. logged-in home), saves [User.preferredLanguage] for emergency SMS/WhatsApp wording.
+  final Future<void> Function(String languageCode)? onLanguageCommitted;
+
   const LanguageDropdown({
     super.key,
     required this.localeProvider,
     this.iconColor,
+    this.onLanguageCommitted,
   });
 
   @override
@@ -25,8 +29,9 @@ class LanguageDropdown extends StatelessWidget {
     return PopupMenuButton<String>(
       icon: Icon(Icons.language, color: color),
       tooltip: 'Language',
-      onSelected: (String code) {
-        localeProvider.setLocale(Locale(code));
+      onSelected: (String code) async {
+        await localeProvider.setLocale(Locale(code));
+        await onLanguageCommitted?.call(code);
       },
       itemBuilder: (context) => [
         PopupMenuItem<String>(

@@ -36,6 +36,8 @@ class User {
   final Address? address;
   final List<EmergencyContact> emergencyContacts;
   final ReminderSettings? reminderSettings;
+  /// Emergency SMS/WhatsApp template language: `en` or `fr` (optional on server).
+  final String? preferredLanguage;
 
   User({
     required this.id,
@@ -49,6 +51,7 @@ class User {
     this.address,
     this.emergencyContacts = const [],
     this.reminderSettings,
+    this.preferredLanguage,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -78,6 +81,7 @@ class User {
           ? ReminderSettings.fromJson(
               json['reminderSettings'] as Map<String, dynamic>)
           : null,
+      preferredLanguage: json['preferredLanguage'] as String?,
     );
   }
 
@@ -95,6 +99,7 @@ class User {
       'emergencyContacts':
           emergencyContacts.map((e) => e.toJson()).toList(),
       'reminderSettings': reminderSettings?.toJson(),
+      'preferredLanguage': preferredLanguage,
     };
   }
 }

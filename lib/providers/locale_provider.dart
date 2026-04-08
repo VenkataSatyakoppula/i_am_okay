@@ -3,6 +3,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../utils/preferred_language.dart';
+
 const String _localeKey = 'app_locale';
 
 class LocaleProvider extends ChangeNotifier {
@@ -45,5 +47,14 @@ class LocaleProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_localeKey, locale.languageCode);
     notifyListeners();
+  }
+
+  /// Applies [User.preferredLanguage] from the server (case-insensitive `en`/`fr`).
+  /// Null or empty leaves the current app locale unchanged.
+  Future<void> applyFromUserPreferredLanguage(String? preferredLanguageRaw) async {
+    final raw = preferredLanguageRaw?.trim();
+    if (raw == null || raw.isEmpty) return;
+    final code = normalizePreferredLanguageCode(raw);
+    await setLocale(Locale(code));
   }
 }

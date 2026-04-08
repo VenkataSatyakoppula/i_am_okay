@@ -4,6 +4,7 @@ const String userFragment = """
     mobileNumber
     phoneExt
     email
+    preferredLanguage
     createdAt
     updatedAt
     name {

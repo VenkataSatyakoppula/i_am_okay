@@ -7,6 +7,7 @@ import 'package:timezone/timezone.dart' as tz;
 import '../models/user_model.dart';
 import '../services/check_in_service.dart';
 import '../services/graphql_service.dart';
+import '../utils/preferred_language.dart';
 import '../services/notification_service.dart';
 import '../widgets/loading_overlay.dart';
 import 'emergency_contact_screen.dart';
@@ -29,6 +30,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const _storage = FlutterSecureStorage();
+
   int _currentIndex = 0;
   String? _userRole;
   String? _userId;
@@ -37,13 +40,49 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _initUser();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncLocaleFromUserProfile());
   }
 
   Future<void> _initUser() async {
-    const storage = FlutterSecureStorage();
-    _userRole = await storage.read(key: 'user_role');
-    _userId = await storage.read(key: 'user_id');
+    _userRole = await _storage.read(key: 'user_role');
+    _userId = await _storage.read(key: 'user_id');
     setState(() {});
+  }
+
+  /// Contacts only see History + Settings (no [HomeContent]); subscribers may load profile here before home data.
+  Future<void> _syncLocaleFromUserProfile() async {
+    if (!mounted) return;
+    final userId = await _storage.read(key: 'user_id');
+    if (userId == null || !mounted) return;
+
+    final cached = await GraphQLService.getCachedUser();
+    final cachedPl = cached?.preferredLanguage?.trim();
+    if (cached != null && cachedPl != null && cachedPl.isNotEmpty) {
+      await context
+          .read<LocaleProvider>()
+          .applyFromUserPreferredLanguage(cached.preferredLanguage);
+      return;
+    }
+
+    try {
+      final user = await GraphQLService.getUser(userId);
+      if (!mounted) return;
+      await context
+          .read<LocaleProvider>()
+          .applyFromUserPreferredLanguage(user?.preferredLanguage);
+    } catch (_) {}
+  }
+
+  Future<void> _syncPreferredLanguageToBackend(String languageCode) async {
+    final id = _userId;
+    if (id == null) return;
+    final code = preferredLanguageFromUiLocale(languageCode);
+    try {
+      final u = await GraphQLService.updateUser(id, {'preferredLanguage': code});
+      if (u != null) await GraphQLService.saveUserToCache(u);
+    } catch (_) {
+      // Offline / errors: UI locale already updated; sync can retry from Settings.
+    }
   }
 
   List<Widget> get _screens {
@@ -118,7 +157,10 @@ class _HomeScreenState extends State<HomeScreen> {
         automaticallyImplyLeading: false,
         centerTitle: false,
         actions: [
-          LanguageDropdown(localeProvider: localeProvider),
+          LanguageDropdown(
+            localeProvider: localeProvider,
+            onLanguageCommitted: _syncPreferredLanguageToBackend,
+          ),
         ],
       ),
       body: _screens[_currentIndex],
@@ -203,6 +245,11 @@ class _HomeContentState extends State<HomeContent>
             _applyUserToState(cachedUser);
           }
         });
+        if (cachedUser != null) {
+          await context
+              .read<LocaleProvider>()
+              .applyFromUserPreferredLanguage(cachedUser.preferredLanguage);
+        }
       }
 
       final userId = await _storage.read(key: 'user_id');
@@ -216,6 +263,9 @@ class _HomeContentState extends State<HomeContent>
         setState(() {
           _applyUserToState(user);
         });
+        await context
+            .read<LocaleProvider>()
+            .applyFromUserPreferredLanguage(user.preferredLanguage);
       }
 
       // Check if there is a check-in log for today at or after the user's set reminder time (success state)

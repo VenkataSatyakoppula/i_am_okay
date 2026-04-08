@@ -7,6 +7,7 @@ import '../services/notification_service.dart';
 import '../models/user_model.dart';
 import '../utils/api_error_handler.dart';
 import '../utils/phone_display_helper.dart';
+import '../utils/state_field.dart';
 import 'landing_screen.dart';
 import 'about_us_screen.dart';
 import 'daily_reminder_screen.dart';
@@ -229,7 +230,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       addr.address1,
       addr.address2,
       addr.city,
-      addr.state,
+      truncateStateForDisplay(addr.state),
       addr.zipCode
     ] : [];
     

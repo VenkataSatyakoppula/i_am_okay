@@ -198,7 +198,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Failed to load profile. You may be offline.';
 
   @override
-  String get pleaseSelectState => 'Please select a state';
+  String get pleaseSelectState => 'State is required';
 
   @override
   String get profileUpdatedSuccessfully => 'Profile updated successfully!';
@@ -281,7 +281,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hintZipCode => 'Zip Code';
 
   @override
-  String get hintSelectState => 'Select State';
+  String get hintSelectState => 'Enter state or region';
 
   @override
   String get hintEmail => 'Enter your email address';

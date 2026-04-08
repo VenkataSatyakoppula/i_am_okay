@@ -202,7 +202,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Échec du chargement du profil. Vous êtes peut-être hors ligne.';
 
   @override
-  String get pleaseSelectState => 'Veuillez sélectionner un état';
+  String get pleaseSelectState => 'L\'état ou la région est requis';
 
   @override
   String get profileUpdatedSuccessfully => 'Profil mis à jour avec succès !';
@@ -287,7 +287,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get hintZipCode => 'Code postal';
 
   @override
-  String get hintSelectState => 'Sélectionnez l\'état';
+  String get hintSelectState => 'Entrez l\'état ou la région';
 
   @override
   String get hintEmail => 'Entrez votre adresse email';

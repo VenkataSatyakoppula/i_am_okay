@@ -10,6 +10,8 @@ import '../providers/locale_provider.dart';
 import '../services/notification_service.dart';
 import '../services/graphql_service.dart';
 import '../utils/phone_display_helper.dart';
+import '../utils/state_field.dart';
+import '../utils/preferred_language.dart';
 import '../widgets/language_dropdown.dart';
 
 class EmergencyContactDashboard extends StatefulWidget {
@@ -28,6 +30,30 @@ class _EmergencyContactDashboardState extends State<EmergencyContactDashboard> {
   void initState() {
     super.initState();
     _usersFuture = _fetchUsers();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncLocaleFromCachedUser());
+  }
+
+  Future<void> _syncLocaleFromCachedUser() async {
+    if (!mounted) return;
+    final userId = await _storage.read(key: 'user_id');
+    if (userId == null || !mounted) return;
+
+    final cached = await GraphQLService.getCachedUser();
+    final pl = cached?.preferredLanguage?.trim();
+    if (cached != null && pl != null && pl.isNotEmpty) {
+      await context
+          .read<LocaleProvider>()
+          .applyFromUserPreferredLanguage(cached.preferredLanguage);
+      return;
+    }
+
+    try {
+      final u = await GraphQLService.getUser(userId);
+      if (!mounted || u == null) return;
+      await context
+          .read<LocaleProvider>()
+          .applyFromUserPreferredLanguage(u.preferredLanguage);
+    } catch (_) {}
   }
 
   Future<List<User>> _fetchUsers() async {
@@ -64,6 +90,16 @@ class _EmergencyContactDashboardState extends State<EmergencyContactDashboard> {
         (route) => false,
       );
     }
+  }
+
+  Future<void> _syncPreferredLanguageToBackend(String languageCode) async {
+    final id = await _storage.read(key: 'user_id');
+    if (id == null) return;
+    final code = preferredLanguageFromUiLocale(languageCode);
+    try {
+      final u = await GraphQLService.updateUser(id, {'preferredLanguage': code});
+      if (u != null) await GraphQLService.saveUserToCache(u);
+    } catch (_) {}
   }
 
   Future<void> _makePhoneCall(String phoneNumber, [String? phoneExt]) async {
@@ -111,7 +147,10 @@ class _EmergencyContactDashboardState extends State<EmergencyContactDashboard> {
           child: Image.asset('assets/icons/app_icon.png'),
         ),
         actions: [
-          LanguageDropdown(localeProvider: context.watch<LocaleProvider>()),
+          LanguageDropdown(
+            localeProvider: context.watch<LocaleProvider>(),
+            onLanguageCommitted: _syncPreferredLanguageToBackend,
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: _logout,
@@ -213,7 +252,7 @@ class _EmergencyContactDashboardState extends State<EmergencyContactDashboard> {
                         const SizedBox(height: 4),
                         if (address?.city != null && address?.state != null)
                           Text(
-                            '${address!.city}, ${address.state}',
+                            '${address!.city}, ${truncateStateForDisplay(address.state)}',
                             style: const TextStyle(
                               fontSize: 14,
                               color: Colors.grey,

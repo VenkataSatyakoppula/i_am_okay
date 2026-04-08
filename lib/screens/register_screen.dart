@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:IamOkay/l10n/app_localizations.dart';
 import '../constants/countries.dart';
 import '../widgets/custom_button.dart';
@@ -8,6 +9,9 @@ import '../widgets/loading_overlay.dart';
 import '../services/graphql_service.dart';
 import '../utils/phone_input_formatter.dart';
 import '../utils/name_validator.dart';
+import '../utils/state_field.dart';
+import '../utils/preferred_language.dart';
+import '../providers/locale_provider.dart';
 import 'login_screen.dart';
 import 'otp_screen.dart';
 
@@ -27,6 +31,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _addressLine2Controller = TextEditingController();
   final _cityController = TextEditingController();
   final _zipCodeController = TextEditingController();
+  final _stateController = TextEditingController();
   final _emailController = TextEditingController();
 
   final _firstNameFocus = FocusNode();
@@ -37,30 +42,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _addressLine2Focus = FocusNode();
   final _cityFocus = FocusNode();
   final _zipCodeFocus = FocusNode();
+  final _stateFocus = FocusNode();
   final _emailFocus = FocusNode();
 
   final _formKey = GlobalKey<FormState>();
 
-  String? _selectedState;
   CountryOption _selectedCountry = supportedCountries.first;
 
-  // Mock data for Zip to State mapping
+  /// Mock ZIP → state suggestion; value is capped at [kStateInputMaxLength].
   final Map<String, String> _zipToState = {
     '10001': 'NY',
     '90001': 'CA',
     '60601': 'IL',
     '77001': 'TX',
     '33101': 'FL',
-    // Add more as needed or integrate a real API
   };
-
-  final List<String> _states = [
-    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
-    'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
-    'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
-    'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
-    'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
-  ];
 
   @override
   void initState() {
@@ -78,6 +74,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _addressLine2Controller.dispose();
     _cityController.dispose();
     _zipCodeController.dispose();
+    _stateController.dispose();
     _emailController.dispose();
     _firstNameFocus.dispose();
     _lastNameFocus.dispose();
@@ -87,6 +84,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _addressLine2Focus.dispose();
     _cityFocus.dispose();
     _zipCodeFocus.dispose();
+    _stateFocus.dispose();
     _emailFocus.dispose();
     super.dispose();
   }
@@ -96,8 +94,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (zip.length >= 5) {
       // Simple lookup
       if (_zipToState.containsKey(zip)) {
+        final suggested = _zipToState[zip]!;
+        final capped = suggested.length > kStateInputMaxLength
+            ? suggested.substring(0, kStateInputMaxLength)
+            : suggested;
         setState(() {
-          _selectedState = _zipToState[zip];
+          _stateController.text = capped;
         });
       }
       // In a real app, you might call an API here
@@ -107,17 +109,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _handleRegister() async {
     // 1. Validation
     if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
-    if (_selectedState == null) {
-      final l10n = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n?.pleaseSelectState ?? 'Please select a state'),
-          backgroundColor: Colors.red,
-        ),
-      );
       return;
     }
 
@@ -143,10 +134,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
 
       // 3. Prepare User Data (Do not create yet)
+      final preferredLanguage = preferredLanguageFromUiLocale(
+        context.read<LocaleProvider>().locale.languageCode,
+      );
       final input = {
         'mobileNumber': mobile,
         'phoneExt': phoneExt,
         if (email.isNotEmpty) 'email': email,
+        'preferredLanguage': preferredLanguage,
         'name': {
           'firstName': _firstNameController.text.trim(),
           'lastName': _lastNameController.text.trim(),
@@ -157,7 +152,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'address2': _addressLine2Controller.text.trim(),
           'city': _cityController.text.trim(),
           'zipCode': _zipCodeController.text.trim(),
-          'state': _selectedState,
+          'state': _stateController.text.trim(),
         }
       };
 
@@ -421,7 +416,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         controller: _zipCodeController,
                         focusNode: _zipCodeFocus,
                         textInputAction: TextInputAction.next,
-                        onSubmitted: (_) => FocusScope.of(context).requestFocus(_emailFocus),
+                        onSubmitted: (_) => FocusScope.of(context).requestFocus(_stateFocus),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return l10n.validationZipRequired;
@@ -436,20 +431,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(width: 16.0),
                     Expanded(
                       flex: 1,
-                      child: CustomDropdownField<String>(
+                      child: CustomTextField(
                         label: l10n.state,
                         hint: l10n.hintSelectState,
-                        value: _selectedState,
-                        items: _states.map((String state) {
-                          return DropdownMenuItem<String>(
-                            value: state,
-                            child: Text(state),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedState = newValue;
-                          });
+                        controller: _stateController,
+                        focusNode: _stateFocus,
+                        textInputAction: TextInputAction.next,
+                        inputFormatters: stateFieldInputFormatters(),
+                        onSubmitted: (_) =>
+                            FocusScope.of(context).requestFocus(_emailFocus),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return l10n.pleaseSelectState;
+                          }
+                          return null;
                         },
                       ),
                     ),

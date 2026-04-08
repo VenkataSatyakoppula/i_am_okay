@@ -3,9 +3,9 @@ import 'package:IamOkay/models/user_model.dart';
 import 'package:IamOkay/services/graphql_service.dart';
 import 'package:IamOkay/widgets/custom_button.dart';
 import 'package:IamOkay/widgets/custom_text_field.dart';
-import 'package:IamOkay/widgets/custom_dropdown_field.dart';
 import 'package:IamOkay/utils/api_error_handler.dart';
 import 'package:IamOkay/utils/name_validator.dart';
+import 'package:IamOkay/utils/state_field.dart';
 import 'package:IamOkay/l10n/app_localizations.dart';
 import 'package:IamOkay/widgets/loading_overlay.dart';
 
@@ -27,6 +27,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _address2Controller;
   late TextEditingController _cityController;
   late TextEditingController _zipCodeController;
+  late TextEditingController _stateController;
 
   final _firstNameFocus = FocusNode();
   final _lastNameFocus = FocusNode();
@@ -37,21 +38,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _zipCodeFocus = FocusNode();
   final _stateFocus = FocusNode();
 
-  String? _selectedState;
-
-  final List<String> _states = [
-    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
-    'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
-    'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
-    'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
-    'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
-  ];
-
-  String? _normalizeState(String? state) {
-    if (state == null || state.isEmpty) return null;
-    return _states.contains(state) ? state : null;
-  }
-
   @override
   void initState() {
     super.initState();
@@ -61,7 +47,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _address1Controller = TextEditingController(text: widget.user.address?.address1);
     _address2Controller = TextEditingController(text: widget.user.address?.address2);
     _cityController = TextEditingController(text: widget.user.address?.city);
-    _selectedState = _normalizeState(widget.user.address?.state);
+    final stateRaw = widget.user.address?.state ?? '';
+    _stateController = TextEditingController(
+      text: stateRaw.length > kStateInputMaxLength
+          ? stateRaw.substring(0, kStateInputMaxLength)
+          : stateRaw,
+    );
     _zipCodeController = TextEditingController(text: widget.user.address?.zipCode);
   }
 
@@ -74,6 +65,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _address2Controller.dispose();
     _cityController.dispose();
     _zipCodeController.dispose();
+    _stateController.dispose();
     _firstNameFocus.dispose();
     _lastNameFocus.dispose();
     _aliasFocus.dispose();
@@ -88,16 +80,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _handleUpdate() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_selectedState == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a state'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
     LoadingOverlay.show(context);
     try {
       await GraphQLService.updateUser(widget.user.id, {
@@ -110,7 +92,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           'address1': _address1Controller.text.trim(),
           'address2': _address2Controller.text.trim().isEmpty ? null : _address2Controller.text.trim(),
           'city': _cityController.text.trim(),
-          'state': _selectedState,
+          'state': _stateController.text.trim(),
           'zipCode': _zipCodeController.text.trim(),
         },
       });
@@ -290,23 +272,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     const SizedBox(width: 16.0),
                     Expanded(
                       flex: 1,
-                      child: CustomDropdownField<String>(
+                      child: CustomTextField(
                         label: l10n.state,
                         hint: l10n.hintSelectState,
-                        value: _normalizeState(_selectedState),
-                        items: _states.map((String state) {
-                          return DropdownMenuItem<String>(
-                            value: state,
-                            child: Text(state),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedState = newValue;
-                          });
+                        controller: _stateController,
+                        focusNode: _stateFocus,
+                        textInputAction: TextInputAction.done,
+                        inputFormatters: stateFieldInputFormatters(),
+                        onSubmitted: (_) => _handleUpdate(),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return l10n.pleaseSelectState;
+                          }
+                          return null;
                         },
-                        validator: (value) =>
-                            value == null ? l10n.pleaseSelectState : null,
                       ),
                     ),
                   ],
