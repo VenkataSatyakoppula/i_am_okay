@@ -198,7 +198,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Failed to load profile. You may be offline.';
 
   @override
-  String get pleaseSelectState => 'State is required';
+  String get pleaseSelectState => 'State or province is required';
 
   @override
   String get profileUpdatedSuccessfully => 'Profile updated successfully!';
@@ -245,10 +245,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get city => 'City';
 
   @override
-  String get zipCode => 'Zip Code';
+  String get zipCode => 'Postal code';
 
   @override
-  String get state => 'State';
+  String get state => 'State / province';
 
   @override
   String get email => 'Email';
@@ -278,10 +278,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hintCity => 'Enter your city';
 
   @override
-  String get hintZipCode => 'Zip Code';
+  String get hintZipCode => 'Postal code';
 
   @override
-  String get hintSelectState => 'Enter state or region';
+  String get hintSelectState => 'State, province, or region';
 
   @override
   String get hintEmail => 'Enter your email address';
@@ -324,10 +324,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get validationCityRequired => 'City is required';
 
   @override
-  String get validationZipRequired => 'Zip Code is required';
-
-  @override
-  String get validationZip5Digits => 'Enter a valid 5-digit Zip Code';
+  String get validationZipRequired => 'Postal code is required';
 
   @override
   String get validationEmailInvalid => 'Enter a valid email address';

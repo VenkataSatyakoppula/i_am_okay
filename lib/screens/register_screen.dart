@@ -47,21 +47,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   final _formKey = GlobalKey<FormState>();
 
-  CountryOption _selectedCountry = supportedCountries.first;
-
-  /// Mock ZIP → state suggestion; value is capped at [kStateInputMaxLength].
-  final Map<String, String> _zipToState = {
-    '10001': 'NY',
-    '90001': 'CA',
-    '60601': 'IL',
-    '77001': 'TX',
-    '33101': 'FL',
-  };
+  late CountryOption _selectedCountry;
 
   @override
   void initState() {
     super.initState();
-    _zipCodeController.addListener(_onZipChanged);
+    _selectedCountry = defaultCountryForLocale(
+      WidgetsBinding.instance.platformDispatcher.locale,
+    );
   }
 
   @override
@@ -87,23 +80,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _stateFocus.dispose();
     _emailFocus.dispose();
     super.dispose();
-  }
-
-  void _onZipChanged() {
-    final zip = _zipCodeController.text;
-    if (zip.length >= 5) {
-      // Simple lookup
-      if (_zipToState.containsKey(zip)) {
-        final suggested = _zipToState[zip]!;
-        final capped = suggested.length > kStateInputMaxLength
-            ? suggested.substring(0, kStateInputMaxLength)
-            : suggested;
-        setState(() {
-          _stateController.text = capped;
-        });
-      }
-      // In a real app, you might call an API here
-    }
   }
 
   Future<void> _handleRegister() async {
@@ -412,7 +388,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: CustomTextField(
                         label: l10n.zipCode,
                         hint: l10n.hintZipCode,
-                        keyboardType: TextInputType.number,
+                        keyboardType: TextInputType.streetAddress,
+                        inputFormatters: postalCodeInputFormatters(),
                         controller: _zipCodeController,
                         focusNode: _zipCodeFocus,
                         textInputAction: TextInputAction.next,
@@ -420,9 +397,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return l10n.validationZipRequired;
-                          }
-                          if (!RegExp(r'^\d{5}$').hasMatch(value)) {
-                            return l10n.validationZip5Digits;
                           }
                           return null;
                         },

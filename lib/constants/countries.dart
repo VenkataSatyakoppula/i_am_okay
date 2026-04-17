@@ -1,3 +1,5 @@
+import 'dart:ui' show Locale;
+
 /// Supported countries for phone/country code selection.
 class CountryOption {
   final String name;
@@ -31,3 +33,22 @@ const List<CountryOption> supportedCountries = [
   CountryOption(name: 'Kenya', phoneExt: '254', flag: '🇰🇪'),
   CountryOption(name: 'Burkina Faso', phoneExt: '226', flag: '🇧🇫'),
 ];
+
+/// Picks a default dial country from the device [locale] when it matches a
+/// supported entry; otherwise the first list entry is used.
+CountryOption defaultCountryForLocale(Locale locale) {
+  switch (locale.countryCode?.toUpperCase()) {
+    case 'US':
+      return supportedCountries[0];
+    case 'CA':
+      return supportedCountries[1];
+    case 'IN':
+      return supportedCountries[2];
+    case 'KE':
+      return supportedCountries[3];
+    case 'BF':
+      return supportedCountries[4];
+    default:
+      return supportedCountries.first;
+  }
+}

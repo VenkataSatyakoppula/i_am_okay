@@ -38,11 +38,14 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _storage = const FlutterSecureStorage();
   bool _canUseBiometric = false;
-  CountryOption _selectedCountry = supportedCountries.first;
+  late CountryOption _selectedCountry;
 
   @override
   void initState() {
     super.initState();
+    _selectedCountry = defaultCountryForLocale(
+      WidgetsBinding.instance.platformDispatcher.locale,
+    );
     if (widget.initialMobileNumber != null) {
       _mobileController.text = widget.initialMobileNumber!;
     }

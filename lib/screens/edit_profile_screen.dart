@@ -53,7 +53,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ? stateRaw.substring(0, kStateInputMaxLength)
           : stateRaw,
     );
-    _zipCodeController = TextEditingController(text: widget.user.address?.zipCode);
+    final zipRaw = widget.user.address?.zipCode ?? '';
+    final zipCapped = zipRaw.length > kPostalCodeInputMaxLength
+        ? zipRaw.substring(0, kPostalCodeInputMaxLength)
+        : zipRaw;
+    _zipCodeController = TextEditingController(text: zipCapped);
   }
 
   @override
@@ -253,7 +257,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       child: CustomTextField(
                         label: l10n.zipCode,
                         hint: l10n.hintZipCode,
-                        keyboardType: TextInputType.number,
+                        keyboardType: TextInputType.streetAddress,
+                        inputFormatters: postalCodeInputFormatters(),
                         controller: _zipCodeController,
                         focusNode: _zipCodeFocus,
                         textInputAction: TextInputAction.next,
@@ -261,9 +266,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return l10n.validationZipRequired;
-                          }
-                          if (!RegExp(r'^\d{5}$').hasMatch(value)) {
-                            return l10n.validationZip5Digits;
                           }
                           return null;
                         },

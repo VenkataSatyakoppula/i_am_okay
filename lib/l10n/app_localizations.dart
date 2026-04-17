@@ -461,7 +461,7 @@ abstract class AppLocalizations {
   /// No description provided for @pleaseSelectState.
   ///
   /// In en, this message translates to:
-  /// **'State is required'**
+  /// **'State or province is required'**
   String get pleaseSelectState;
 
   /// No description provided for @profileUpdatedSuccessfully.
@@ -551,13 +551,13 @@ abstract class AppLocalizations {
   /// No description provided for @zipCode.
   ///
   /// In en, this message translates to:
-  /// **'Zip Code'**
+  /// **'Postal code'**
   String get zipCode;
 
   /// No description provided for @state.
   ///
   /// In en, this message translates to:
-  /// **'State'**
+  /// **'State / province'**
   String get state;
 
   /// No description provided for @email.
@@ -617,13 +617,13 @@ abstract class AppLocalizations {
   /// No description provided for @hintZipCode.
   ///
   /// In en, this message translates to:
-  /// **'Zip Code'**
+  /// **'Postal code'**
   String get hintZipCode;
 
   /// No description provided for @hintSelectState.
   ///
   /// In en, this message translates to:
-  /// **'Enter state or region'**
+  /// **'State, province, or region'**
   String get hintSelectState;
 
   /// No description provided for @hintEmail.
@@ -707,14 +707,8 @@ abstract class AppLocalizations {
   /// No description provided for @validationZipRequired.
   ///
   /// In en, this message translates to:
-  /// **'Zip Code is required'**
+  /// **'Postal code is required'**
   String get validationZipRequired;
-
-  /// No description provided for @validationZip5Digits.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter a valid 5-digit Zip Code'**
-  String get validationZip5Digits;
 
   /// No description provided for @validationEmailInvalid.
   ///

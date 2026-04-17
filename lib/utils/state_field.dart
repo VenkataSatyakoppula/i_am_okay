@@ -2,6 +2,11 @@ import 'package:flutter/services.dart';
 
 const int kStateInputMaxLength = 30;
 const int kStateDisplayMaxLength = 10;
+const int kPostalCodeInputMaxLength = 20;
+
+List<TextInputFormatter> postalCodeInputFormatters() => [
+      LengthLimitingTextInputFormatter(kPostalCodeInputMaxLength),
+    ];
 
 /// For read-only UI; full value remains in models/API.
 String? truncateStateForDisplay(String? state) {

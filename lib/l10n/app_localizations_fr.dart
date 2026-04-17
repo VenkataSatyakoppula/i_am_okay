@@ -202,7 +202,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Échec du chargement du profil. Vous êtes peut-être hors ligne.';
 
   @override
-  String get pleaseSelectState => 'L\'état ou la région est requis';
+  String get pleaseSelectState => 'L\'état ou la province est obligatoire';
 
   @override
   String get profileUpdatedSuccessfully => 'Profil mis à jour avec succès !';
@@ -254,7 +254,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get zipCode => 'Code postal';
 
   @override
-  String get state => 'État';
+  String get state => 'État / province';
 
   @override
   String get email => 'Email';
@@ -287,7 +287,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get hintZipCode => 'Code postal';
 
   @override
-  String get hintSelectState => 'Entrez l\'état ou la région';
+  String get hintSelectState => 'État, province ou région';
 
   @override
   String get hintEmail => 'Entrez votre adresse email';
@@ -331,10 +331,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get validationZipRequired => 'Le code postal est requis';
-
-  @override
-  String get validationZip5Digits =>
-      'Entrez un code postal valide à 5 chiffres';
 
   @override
   String get validationEmailInvalid => 'Entrez une adresse email valide';

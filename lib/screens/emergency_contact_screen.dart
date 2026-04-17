@@ -49,7 +49,9 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
   bool _hasConsented = false;
   /// User selects either SMS or WhatsApp, not both.
   String _selectedChannel = 'sms';
-  CountryOption _selectedContactCountry = supportedCountries.first;
+  CountryOption _selectedContactCountry = defaultCountryForLocale(
+    WidgetsBinding.instance.platformDispatcher.locale,
+  );
 
   @override
   void initState() {
@@ -372,7 +374,9 @@ class _EmergencyContactScreenState extends State<EmergencyContactScreen> {
 
       // Reset form
       _selectedRelation = null;
-      _selectedContactCountry = supportedCountries.first;
+      _selectedContactCountry = defaultCountryForLocale(
+        WidgetsBinding.instance.platformDispatcher.locale,
+      );
       _selectedChannel = 'sms';
       _nameController.clear();
       _phoneController.clear();
