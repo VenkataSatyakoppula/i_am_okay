@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 
 class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({super.key});
@@ -47,19 +46,11 @@ class PrivacyPolicyScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SvgPicture.asset(
-                        'assets/icons/InfodatLogoTop.svg',
-                        height: 40,
-                      ),
-                      const SizedBox(width: 20),
-                      Image.asset(
-                        'assets/icons/Selltis_Logolockup.png',
-                        height: 40,
-                      ),
-                    ],
+                  Center(
+                    child: Image.asset(
+                      'assets/icons/tysonite_partners.jpg',
+                      height: 40,
+                    ),
                   ),
                 ],
               ),

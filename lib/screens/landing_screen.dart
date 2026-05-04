@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:IamOkay/l10n/app_localizations.dart';
@@ -219,14 +218,9 @@ class _LandingScreenState extends State<LandingScreen>
                         ),
                       ),
                       const SizedBox(width: 8),
-                      SvgPicture.asset(
-                    'assets/icons/InfodatLogoTop.svg',
-                    height: 20,
-                  ),
-                  const SizedBox(width: 8),
                       Image.asset(
-                        'assets/icons/Selltis_Logolockup.png',
-                        height: 20,
+                        'assets/icons/tysonite_partners.jpg',
+                        height: 35,
                       ),
                     ],
                   );
